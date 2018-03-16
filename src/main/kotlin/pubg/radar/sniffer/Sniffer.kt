@@ -55,7 +55,8 @@ class Sniffer {
 
     val preSelfCoords = Vector2()
     var preDirection = Vector2()
-    var selfCoords = Vector2()
+    // var selfCoords = Vector2()
+    var selfCoordsSniffer = Vector2()
     
     init {
       register(this)
@@ -235,16 +236,13 @@ class Sniffer {
             }
             */
             /*
-            if (udp.header.dstPort.valueAsInt() in 7000..7999) {
-                proc_raw_packet(raw)
-                //println("In:\n$udp")
-            */
             if (raw.size == 44) {
                 parseSelfLocation(raw)
-            } else if (udp.header.srcPort.valueAsInt() in 7000..7999){
-                proc_raw_packet(raw, true)
-                //println("Out:\n$udp")
-            }
+            */
+            if (udp.header.dstPort.valueAsInt() in 7000..7999)
+              proc_raw_packet(raw, false)
+            else if (udp.header.srcPort.valueAsInt() in 7000..7999)
+              proc_raw_packet(raw)
           } catch (e: Exception) {
           }
         }
@@ -268,11 +266,17 @@ class Sniffer {
                 proc_raw_packet(raw, false)
                 //println("In:\n$udp")
               */
+              /*
               if (raw.size == 44) {
                 parseSelfLocation(raw)
+              */
+              if (udp.header.dstPort.valueAsInt() in 7000..7999) {
+                proc_raw_packet(raw, false)
+                if (raw.size == 44) {
+                  parseSelfLocation(raw)
+                }
               } else if (udp.header.srcPort.valueAsInt() in 7000..7999) {
-                proc_raw_packet(raw, true)
-                //println("Out:\n$udp")
+                proc_raw_packet(raw)
               }
             } catch (e: Exception) {
             }
@@ -294,7 +298,7 @@ class Sniffer {
         val x = 0.1250155302572263f * _x - 20.58662848625851f
         val y = -0.12499267869373985f * _y + 2097021.7946571815f
         val z = _z / 20.0f
-        selfCoords = Vector2(x, y)
+        selfCoordsSniffer = Vector2(x, y)
         return true
       }
       return false

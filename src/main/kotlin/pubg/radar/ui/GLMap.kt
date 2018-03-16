@@ -26,10 +26,6 @@ import pubg.radar.deserializer.channel.ActorChannel.Companion.corpseLocation
 import pubg.radar.deserializer.channel.ActorChannel.Companion.droppedItemLocation
 import pubg.radar.deserializer.channel.ActorChannel.Companion.visualActors
 import pubg.radar.deserializer.channel.ActorChannel.Companion.weapons
-import pubg.radar.sniffer.Sniffer.Companion.localAddr
-import pubg.radar.sniffer.Sniffer.Companion.preDirection
-import pubg.radar.sniffer.Sniffer.Companion.preSelfCoords
-import pubg.radar.sniffer.Sniffer.Companion.selfCoords
 import pubg.radar.sniffer.Sniffer.Companion.sniffOption
 import pubg.radar.struct.*
 import pubg.radar.struct.Archetype.*
@@ -82,11 +78,12 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
   }
   
   override fun onGameStart() {
-    preSelfCoords.set(if (isErangel) spawnErangel else spawnDesert)
-    selfCoords.set(preSelfCoords)
-    preDirection.setZero()
-    //selfCoords.setZero()
-    //selfAttachTo = null
+    //preSelfCoords.set(if (isErangel) spawnErangel else spawnDesert)
+    //selfCoords.set(preSelfCoords)
+    //preDirection.setZero()
+    //selfCoordsSniffer.setZero()
+    selfCoords.setZero()
+    selfAttachTo = null
   }
   
   override fun onGameOver() {
@@ -150,7 +147,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
   var filterAttach = -1
   var filterLvl2 = -1
   var filterScope = -1
-  var showCompass = 1
+  var showCompass = -1
   var zoomSwitch = 1
 
   var dragging = false
@@ -169,7 +166,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
               (y - selfCoords.y - screenOffsetY) / (camera.zoom * windowToMapUnit) + windowHeight / 2.0f)
 
   fun Vector2.mapToWindow() = mapToWindow(x, y)   
-  fun Vector2.windowToMap() = windowToMap(x, y)   
+  fun Vector2.windowToMap() = windowToMap(x, y)  
   
   override fun scrolled(amount: Int): Boolean {
     if (camera.zoom >= 0.04823f && camera.zoom <= 1.1f) {
@@ -190,7 +187,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       // pinLocation.set(pinLocation.set(screenX.toFloat(), screenY.toFloat()).windowToMap())
       screenOffsetX = 0f
       screenOffsetY = 0f
-      showCompass = 1
+      // showCompass = 1
       return true
     } else if (button == BACK) {
       camera.zoom /= 1.75f
@@ -229,7 +226,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       prevScreenX = screenX.toFloat()
       prevScreenY = screenY.toFloat()
     }
-    showCompass = -1
+    // showCompass = -1
     return true
   }
 
@@ -262,7 +259,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       if (screenOffsetX != 0f && screenOffsetY != 0f) {
         screenOffsetX = 0f
         screenOffsetY = 0f
-        showCompass = 1
+        // showCompass = 1
         return true
       } else {
         if (camera.zoom < 0.1f) {
@@ -293,17 +290,8 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       }
 
     } else if (keycode == NUM_8) {
-      if (zoomSwitch == 1) {
-        camera.zoom = 1 / 12f
-        camera.update()
-        zoomSwitch = zoomSwitch * -1
-        return true
-      } else if (zoomSwitch == -1) {
-        camera.zoom = 1 / 5f
-        camera.update()
-        zoomSwitch = zoomSwitch * -1
-        return true
-      }
+      showCompass = showCompass * -1
+      return true
 
     } else if (keycode == DPAD_LEFT) {
       screenOffsetX -= 200000f * camera.zoom
@@ -413,10 +401,12 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       selfDirection = rotation.y
     }    
     val (selfX, selfY) = selfCoords
+
+    /*
     val selfDir = Vector2(selfX, selfY).sub(preSelfCoords)
     if (selfDir.len() < 1e-8)
       selfDir.set(preDirection)
-    
+    */
     // MOVE CAMERA
     camera.position.set(selfX + screenOffsetX, selfY + screenOffsetY, 0f)
     camera.update()
@@ -426,11 +416,11 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
     var useScale = 0
     when {
         cameraTileScale > 4096 -> useScale = 5
-        cameraTileScale > 2048 -> useScale = 4
-        cameraTileScale > 1024 -> useScale = 3
-        cameraTileScale > 512 -> useScale = 2
-        cameraTileScale > 256 -> useScale = 1
-        else -> useScale = 0
+        cameraTileScale > 2048 -> useScale = 5
+        cameraTileScale > 1024 -> useScale = 4
+        cameraTileScale > 512  -> useScale = 3
+        cameraTileScale > 256  -> useScale = 2
+        else -> useScale = 1
     }
     val (tlX, tlY) = Vector2(0f, 0f).windowToMap()
     val (brX, brY) = Vector2(windowWidth, windowHeight).windowToMap()
@@ -490,15 +480,15 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
 
       val timeText = "${ElapsedWarningDuration.toInt() - TotalWarningDuration.toInt()}"
       layout.setText(hudFont, timeText)
-      if (teamText != numText) {
-        spriteBatch.draw(hud_panel, windowWidth - 390f, windowHeight - 60f)
-        hudFontShadow.draw(spriteBatch, "SECS", windowWidth - 345f, windowHeight - 29f)
-        hudFont.draw(spriteBatch, "${ElapsedWarningDuration.toInt() - TotalWarningDuration.toInt()}", windowWidth - 370f - layout.width /2, windowHeight - 29f)
-      } else {
-        spriteBatch.draw(hud_panel, windowWidth - 390f + 130f, windowHeight - 60f)
-        hudFontShadow.draw(spriteBatch, "SECS", windowWidth - 345f + 130f, windowHeight - 29f)
-        hudFont.draw(spriteBatch, "${ElapsedWarningDuration.toInt() - TotalWarningDuration.toInt()}", windowWidth - 370f + 130f - layout.width /2, windowHeight - 29f)
-      }
+      
+      var offset = 0f
+      if (teamText == numText)
+        offset = 130f
+      spriteBatch.draw(hud_panel, windowWidth - 390f + offset, windowHeight - 60f)
+      hudFontShadow.draw(spriteBatch, "SECS", windowWidth - 345f + offset, windowHeight - 29f)
+      hudFont.draw(spriteBatch, "${ElapsedWarningDuration.toInt() - TotalWarningDuration.toInt()}", windowWidth - 370f + offset - layout.width /2, windowHeight - 29f)
+
+
 
       // ITEM ESP FILTER PANEL
       spriteBatch.draw(hud_panel_blank, 30f, windowHeight - 60f)
@@ -568,8 +558,8 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
     
     Gdx.gl.glEnable(GL20.GL_BLEND)
     draw(Filled) {
-      //color = redZoneColor
-      //circle(RedZonePosition, RedZoneRadius, 100)
+      color = redZoneColor
+      circle(RedZonePosition, RedZoneRadius, 100)
       
       color = visionColor
       circle(selfX, selfY, visionRadius, 100)
@@ -578,8 +568,8 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       //circle(pinLocation, pinRadius * zoom, 10)
       
       // DRAW SELF
-      // drawPlayer(GREEN, tuple4(null, selfX, selfY, selfDirection))
-      drawPlayer(GREEN, tuple4(null, selfX, selfY, selfDir.angle()))
+      drawPlayer(GREEN, tuple4(null, selfX, selfY, selfDirection))
+      // drawPlayer(GREEN, tuple4(null, selfX, selfY, selfDir.angle()))
       drawItem()
       drawAirDrop(zoom)
       drawCorpse()
@@ -588,8 +578,8 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
     
     drawAttackLine(currentTime)
 
-    preSelfCoords.set(selfX, selfY)
-    preDirection = selfDir
+    //preSelfCoords.set(selfX, selfY)
+    //preDirection = selfDir
     
     Gdx.gl.glDisable(GL20.GL_BLEND)
   }
@@ -652,7 +642,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       color = BLUE
       circle(SafetyZonePosition, SafetyZoneRadius, 100)
       
-      if (PoisonGasWarningPosition.len() > 0) {
+      if (PoisonGasWarningPosition.cpy().sub(selfCoords).len() > PoisonGasWarningRadius && PoisonGasWarningRadius > 0) {
         color = safeDirectionColor
         line(selfCoords, PoisonGasWarningPosition)
       }
@@ -1011,7 +1001,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
   
   var lastPlayTime = System.currentTimeMillis()
   fun safeZoneHint() {
-    if (PoisonGasWarningPosition.len() > 0) {
+    if (PoisonGasWarningPosition.cpy().sub(selfCoords).len() > PoisonGasWarningRadius && PoisonGasWarningRadius > 0) {
       val dir = PoisonGasWarningPosition.cpy().sub(selfCoords)
       val road = dir.len() - PoisonGasWarningRadius
       if (road > 0) {

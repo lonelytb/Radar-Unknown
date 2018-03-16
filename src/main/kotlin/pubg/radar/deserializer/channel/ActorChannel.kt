@@ -6,6 +6,8 @@ import pubg.radar.deserializer.CHTYPE_ACTOR
 import pubg.radar.deserializer.actor.repl_layout_bunch
 import pubg.radar.struct.*
 import pubg.radar.struct.Archetype.*
+import pubg.radar.struct.CharacterMoveComp
+import pubg.radar.struct.VehicleMoveComp
 import pubg.radar.struct.NetGUIDCache.Companion.guidCache
 import pubg.radar.struct.cmd.PlayerStateCMD.selfID
 import pubg.radar.util.tuple2
@@ -130,10 +132,15 @@ class ActorChannel(ChIndex: Int, client: Boolean = true): Channel(ChIndex, CHTYP
           repl_layout_bunch(outPayload, repObj, actor)
         }
 
-        if (!client && repObj?.pathName == "Player") {
-          selfID = actor.netGUID
-          while (outPayload.notEnd())
-            charmovecomp(outPayload)
+        if (!client) {
+          when {
+            actor.isVehicle ->
+              VehicleMoveComp(actor, outPayload)
+            actor.isACharacter && repObj?.pathName == "Player" -> {
+              selfID = actor.netGUID
+              CharacterMoveComp(outPayload)
+            }
+          }
         }        
       } catch (e: Exception) {
       }
