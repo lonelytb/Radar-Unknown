@@ -27,6 +27,9 @@ import pubg.radar.deserializer.channel.ActorChannel.Companion.droppedItemLocatio
 import pubg.radar.deserializer.channel.ActorChannel.Companion.visualActors
 import pubg.radar.deserializer.channel.ActorChannel.Companion.weapons
 import pubg.radar.sniffer.Sniffer.Companion.localAddr
+import pubg.radar.sniffer.Sniffer.Companion.preDirection
+import pubg.radar.sniffer.Sniffer.Companion.preSelfCoords
+import pubg.radar.sniffer.Sniffer.Companion.selfCoords
 import pubg.radar.sniffer.Sniffer.Companion.sniffOption
 import pubg.radar.struct.*
 import pubg.radar.struct.Archetype.*
@@ -68,7 +71,10 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
     operator fun Vector3.component2(): Float = y
     operator fun Vector3.component3(): Float = z
     operator fun Vector2.component1(): Float = x
-    operator fun Vector2.component2(): Float = y    
+    operator fun Vector2.component2(): Float = y
+
+    val spawnErangel = Vector2(795548.3f, 17385.875f)
+    val spawnDesert = Vector2(78282f, 731746f)    
   }
   
   init {
@@ -76,8 +82,11 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
   }
   
   override fun onGameStart() {
-    selfCoords.setZero()
-    selfAttachTo = null
+    preSelfCoords.set(if (isErangel) spawnErangel else spawnDesert)
+    selfCoords.set(preSelfCoords)
+    preDirection.setZero()
+    //selfCoords.setZero()
+    //selfAttachTo = null
   }
   
   override fun onGameOver() {
@@ -98,6 +107,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
     // config.setFullscreenMode(Lwjgl3ApplicationConfiguration.getDisplayMode())
     // config.setBackBufferConfig(8, 8, 8, 8, 32, 0, 8)
     config.setBackBufferConfig(8, 8, 8, 8, 16, 0, 2)
+    config.setIdleFPS(60)
     Lwjgl3Application(this, config)
   }
   
@@ -403,6 +413,9 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       selfDirection = rotation.y
     }    
     val (selfX, selfY) = selfCoords
+    val selfDir = Vector2(selfX, selfY).sub(preSelfCoords)
+    if (selfDir.len() < 1e-8)
+      selfDir.set(preDirection)
     
     // MOVE CAMERA
     camera.position.set(selfX + screenOffsetX, selfY + screenOffsetY, 0f)
@@ -475,16 +488,16 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
         hudFont.draw(spriteBatch, "$NumAliveTeams", windowWidth - 240f - layout.width /2, windowHeight - 29f)
       } 
 
-      val timeText = "${TotalWarningDuration.toInt()-ElapsedWarningDuration.toInt()}"
+      val timeText = "${ElapsedWarningDuration.toInt() - TotalWarningDuration.toInt()}"
       layout.setText(hudFont, timeText)
       if (teamText != numText) {
         spriteBatch.draw(hud_panel, windowWidth - 390f, windowHeight - 60f)
         hudFontShadow.draw(spriteBatch, "SECS", windowWidth - 345f, windowHeight - 29f)
-        hudFont.draw(spriteBatch, "${TotalWarningDuration.toInt()-ElapsedWarningDuration.toInt()}", windowWidth - 370f - layout.width /2, windowHeight - 29f)
+        hudFont.draw(spriteBatch, "${ElapsedWarningDuration.toInt() - TotalWarningDuration.toInt()}", windowWidth - 370f - layout.width /2, windowHeight - 29f)
       } else {
         spriteBatch.draw(hud_panel, windowWidth - 390f + 130f, windowHeight - 60f)
         hudFontShadow.draw(spriteBatch, "SECS", windowWidth - 345f + 130f, windowHeight - 29f)
-        hudFont.draw(spriteBatch, "${TotalWarningDuration.toInt()-ElapsedWarningDuration.toInt()}", windowWidth - 370f + 130f - layout.width /2, windowHeight - 29f)
+        hudFont.draw(spriteBatch, "${ElapsedWarningDuration.toInt() - TotalWarningDuration.toInt()}", windowWidth - 370f + 130f - layout.width /2, windowHeight - 29f)
       }
 
       // ITEM ESP FILTER PANEL
@@ -555,8 +568,8 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
     
     Gdx.gl.glEnable(GL20.GL_BLEND)
     draw(Filled) {
-      color = redZoneColor
-      circle(RedZonePosition, RedZoneRadius, 100)
+      //color = redZoneColor
+      //circle(RedZonePosition, RedZoneRadius, 100)
       
       color = visionColor
       circle(selfX, selfY, visionRadius, 100)
@@ -565,7 +578,8 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       //circle(pinLocation, pinRadius * zoom, 10)
       
       // DRAW SELF
-      drawPlayer(GREEN, tuple4(null, selfX, selfY, selfDirection))
+      // drawPlayer(GREEN, tuple4(null, selfX, selfY, selfDirection))
+      drawPlayer(GREEN, tuple4(null, selfX, selfY, selfDir.angle()))
       drawItem()
       drawAirDrop(zoom)
       drawCorpse()
@@ -573,6 +587,9 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
     }
     
     drawAttackLine(currentTime)
+
+    preSelfCoords.set(selfX, selfY)
+    preDirection = selfDir
     
     Gdx.gl.glDisable(GL20.GL_BLEND)
   }

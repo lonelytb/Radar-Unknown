@@ -120,9 +120,9 @@ object PlayerStateCMD: GameListener {
           val ReportToken = propertyString()
 //        println("${actor.netGUID} ReportToken=$ReportToken")
         }
-        30 -> {
+        30 -> { // EmoteBitArray
           return false
-        }        
+        }   
         31 -> {
           val ObserverAuthorityType = readInt(4)
 //        println("${playerNames[actor.netGUID]}${actor.netGUID} ObserverAuthorityType=$ObserverAuthorityType")
@@ -134,7 +134,7 @@ object PlayerStateCMD: GameListener {
         }
         33 -> {
           val bIsZombie = propertyBool()
-//          println("bIsZombie=$bIsZombie")
+//          println("${playerNames[actor.netGUID]}${actor.netGUID}bIsZombie=$bIsZombie")
         }
         34 -> {
           val scoreByDamage = propertyFloat()
@@ -160,7 +160,6 @@ object PlayerStateCMD: GameListener {
         39 -> {
           val TotalMovedDistanceMeter = propertyFloat()
           selfStateID = actor.netGUID//only self will get this update
-//          val NumKills = propertyInt()
 //          println("${playerNames[actor.netGUID]}${actor.netGUID} TotalMovedDistanceMeter=$TotalMovedDistanceMeter")
         }
         40 -> {

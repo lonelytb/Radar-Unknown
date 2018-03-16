@@ -130,7 +130,7 @@ class ActorChannel(ChIndex: Int, client: Boolean = true): Channel(ChIndex, CHTYP
           repl_layout_bunch(outPayload, repObj, actor)
         }
 
-        if (!client && repObj?.pathName == "CharMoveComp") {
+        if (!client && repObj?.pathName == "Player") {
           selfID = actor.netGUID
           while (outPayload.notEnd())
             charmovecomp(outPayload)

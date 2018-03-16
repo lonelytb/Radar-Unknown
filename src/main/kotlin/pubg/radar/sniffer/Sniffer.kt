@@ -1,5 +1,6 @@
 package pubg.radar.sniffer
 
+import com.badlogic.gdx.math.Vector2
 import org.pcap4j.core.*
 import org.pcap4j.core.BpfProgram.BpfCompileMode.OPTIMIZE
 import org.pcap4j.core.PcapNetworkInterface.PromiscuousMode.PROMISCUOUS
@@ -51,6 +52,10 @@ class Sniffer {
     val nif: PcapNetworkInterface
     val localAddr: Inet4Address
     val sniffOption: SniffOption
+
+    val preSelfCoords = Vector2()
+    var preDirection = Vector2()
+    var selfCoords = Vector2()
     
     init {
       register(this)
@@ -206,7 +211,7 @@ class Sniffer {
     fun sniffLocationOnline() {
       val handle = nif.openLive(snapLen, mode, timeout)
       val filter = when (sniffOption) {
-        PortFilter -> "udp portrange 7000-7999"
+        PortFilter -> "udp"
         PPTPFilter -> "ip[9]=47"
         L2TPFilter -> "udp"
       }
@@ -229,9 +234,13 @@ class Sniffer {
                 proc_raw_packet(raw, true)
             }
             */
+            /*
             if (udp.header.dstPort.valueAsInt() in 7000..7999) {
-                proc_raw_packet(raw, false)
+                proc_raw_packet(raw)
                 //println("In:\n$udp")
+            */
+            if (raw.size == 44) {
+                parseSelfLocation(raw)
             } else if (udp.header.srcPort.valueAsInt() in 7000..7999){
                 proc_raw_packet(raw, true)
                 //println("Out:\n$udp")
@@ -244,7 +253,7 @@ class Sniffer {
     
     fun sniffLocationOffline(): Thread {
       return thread(isDaemon = true) {
-        val files = arrayOf("C:\\Misc\\0.pcap")
+        val files = arrayOf("C:\\Misc\\pubg.pcap")
         for (file in files) {
           val handle = Pcaps.openOffline(file)
           
@@ -253,11 +262,16 @@ class Sniffer {
               val packet = handle.nextPacket ?: break
               val udp = udp_payload(packet) ?: continue
               val raw = udp.payload.rawData
-              if (udp.header.srcPort.valueAsInt() in 7000..7999) {
-                proc_raw_packet(raw, true)
-                //println("In:\n$udp")
-              } else if (udp.header.dstPort.valueAsInt() in 7000..7999) {
+              
+              /*
+              if (udp.header.dstPort.valueAsInt() in 7000..7999) {
                 proc_raw_packet(raw, false)
+                //println("In:\n$udp")
+              */
+              if (raw.size == 44) {
+                parseSelfLocation(raw)
+              } else if (udp.header.srcPort.valueAsInt() in 7000..7999) {
+                proc_raw_packet(raw, true)
                 //println("Out:\n$udp")
               }
             } catch (e: Exception) {
@@ -266,6 +280,24 @@ class Sniffer {
           }
         }
       }
+    }
+
+    private fun parseSelfLocation(raw: ByteArray): Boolean {
+      val len = raw.size
+      val flag1 = raw[len - check1]
+      val flag2 = raw[len - check2]
+      val flag3 = raw[len - check3]
+      if (flag1.check() && flag2.check() && flag3.check()) {
+        val _x = raw.toIntBE(len - check1 + 1, 3)
+        val _y = raw.toIntBE(len - check2 + 1, 3)
+        val _z = raw.toIntBE(len - check3 + 1, 3)
+        val x = 0.1250155302572263f * _x - 20.58662848625851f
+        val y = -0.12499267869373985f * _y + 2097021.7946571815f
+        val z = _z / 20.0f
+        selfCoords = Vector2(x, y)
+        return true
+      }
+      return false
     }    
   }
 }
