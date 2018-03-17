@@ -87,7 +87,7 @@ object CMD {
       Plane.name to APawnCMD::process,
       Player.name to ActorCMD::process,
       Parachute.name to APawnCMD::process,
-      AirDrop.name to APawnCMD::process,
+      AirDrop.name to AirDropComponentCMD::process,
       PlayerState.name to PlayerStateCMD::process,
       Team.name to TeamCMD::process,
       "DroppedItemInteractionComponent" to DroppedItemInteractionComponentCMD::process,

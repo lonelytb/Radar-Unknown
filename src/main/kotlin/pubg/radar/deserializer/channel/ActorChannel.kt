@@ -29,6 +29,7 @@ class ActorChannel(ChIndex: Int, client: Boolean = true): Channel(ChIndex, CHTYP
     val corpseLocation = ConcurrentHashMap<NetworkGUID, Vector3>()
     val actorHasWeapons=ConcurrentHashMap<NetworkGUID,IntArray>()
     val weapons = ConcurrentHashMap<Int, Actor>()
+    // val itemBag=ConcurrentHashMap<NetworkGUID,IntArray>>()
 
     
     override fun onGameOver() {
@@ -98,7 +99,7 @@ class ActorChannel(ChIndex: Int, client: Boolean = true): Channel(ChIndex, CHTYP
             repObj = _subobj
           } else {
             val (classGUID, classObj) = bunch.readObject()//SubOjbectClass,SubObjectClassNetGUID
-            if (classObj != null && (actor.Type == DroopedItemGroup || actor.Type == DroppedItem)) {
+            if (classObj != null && (actor.Type == DroopedItemGroup || actor.Type == DroppedItem || actor.Type == AirDrop)) {
               val sn = Item.isGood(classObj.pathName)
               if (sn != null)
                 droppedItemLocation[netguid] = tuple2(Vector2(actor.location.x, actor.location.y), sn)

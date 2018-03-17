@@ -45,7 +45,7 @@ val bikeColor = Color(0.5f, 0.7f, 1f, 0.9f)  //blue
 val boatColor = Color(1f, 0.49f, 0f, 0.9f)  //orange
 val planeColor = Color.ORANGE!!
 
-val sightColor = Color(1f, 1f, 1f, 0.65f)
+val sightColor = Color(1f, 1f, 1f, 0.5f)
 val pinColor = Color(1f, 1f, 0f, 1f)
 
 val aimLineColor = Color(0f, 0f, 1f, 1f)
@@ -68,6 +68,7 @@ val rareSniperColor = Color(1.0f, 0.19f, 0.19f, 0.99f)  //firebrick
 val rareRifleColor = Color(0.54f, 0.27f, 0.14f, 0.99f)  //sienna4
 val rareRifle556Color = Color(0.54f, 0.27f, 0.14f, 0.99f)  //sienna4
 val rareRifle762Color = Color(0.86f, 0.43f, 0.24f, 0.99f)  //sienna2
+val rareAirdropWeaponColor = Color(1.0f, 0.19f, 0.19f, 0.99f)	//firebrick
 
 val rareARAttachColor = Color(0.80f, 0.73f, 0.59f, 0.99f)  //wheat3
 val rareSRAttachColor = Color(1.00f, 0.68f, 0.73f, 0.99f)  //LightPink1

@@ -52,6 +52,12 @@ class Item {
             "M16A4" to "m16",
             "AK47" to "ak",
             "DP28" to "dp28",
+            "AUG" to "AUG",
+            "Groza" to "Groza",
+            "AWM" to "AWM",
+            "M24" to "M24",
+            "M249" to "M249",
+            "Mk14" to "Mk14",
             "Grenade" to "grenade"),
         "Ammo" to mapOf(
             "556mm" to "556",

@@ -103,7 +103,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
     config.setResizable(true)
     // config.setFullscreenMode(Lwjgl3ApplicationConfiguration.getDisplayMode())
     // config.setBackBufferConfig(8, 8, 8, 8, 32, 0, 8)
-    config.setBackBufferConfig(8, 8, 8, 8, 16, 0, 2)
+    config.setBackBufferConfig(8, 8, 8, 8, 16, 0, 4)
     config.setIdleFPS(60)
     Lwjgl3Application(this, config)
   }
@@ -185,10 +185,20 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
   override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
     if (button == MIDDLE) {
       // pinLocation.set(pinLocation.set(screenX.toFloat(), screenY.toFloat()).windowToMap())
-      screenOffsetX = 0f
-      screenOffsetY = 0f
-      // showCompass = 1
-      return true
+      if (screenOffsetX != 0f || screenOffsetY != 0f) {
+        screenOffsetX = 0f
+        screenOffsetY = 0f
+        // showCompass = 1
+        return true
+      } else {
+        if (camera.zoom < 0.1f) {
+          camera.zoom = 1 / 4f
+          return true
+        } else {
+          camera.zoom = 1 / 12f
+          return true
+        }
+      }
     } else if (button == BACK) {
       camera.zoom /= 1.75f
       camera.update()
@@ -256,7 +266,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       return true
 
     } else if (keycode == NUM_5) {
-      if (screenOffsetX != 0f && screenOffsetY != 0f) {
+      if (screenOffsetX != 0f || screenOffsetY != 0f) {
         screenOffsetX = 0f
         screenOffsetY = 0f
         // showCompass = 1
@@ -570,8 +580,9 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       // DRAW SELF
       drawPlayer(GREEN, tuple4(null, selfX, selfY, selfDirection))
       // drawPlayer(GREEN, tuple4(null, selfX, selfY, selfDir.angle()))
-      drawItem()
       drawAirDrop(zoom)
+      drawItem()
+      drawAirdropWeapon()
       drawCorpse()
       drawAPawn(typeLocation, selfX, selfY, zoom, currentTime)
     }
@@ -786,6 +797,77 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       }
     }
   }
+
+  private fun ShapeRenderer.drawAirdropWeapon() { // Higher layer than normal items
+    droppedItemLocation.values
+      .forEach {
+        val (x, y) = it._1
+        val items = it._2
+
+        val backgroundRadius = (itemRadius + 40f)
+        val radius = itemRadius
+        val triBackRadius = backgroundRadius * 1.2f + 10f
+        val triRadius = radius * 1.2f
+        val offset = 600f
+
+        if (filterWeapon == 1) {
+          if ("AWM" in items) {
+            color = WHITE
+            rect(x - backgroundRadius, y - backgroundRadius - offset, backgroundRadius * 2, backgroundRadius * 2)
+            color = rareAirdropWeaponColor
+            rect(x - radius, y - radius - offset, radius * 2, radius * 2)
+          } 
+          else if (("M24" in items)) {
+            color = WHITE
+            rectLine(x - backgroundRadius/1.4f, y - backgroundRadius/1.4f - offset,
+                     x + backgroundRadius/1.4f, y + backgroundRadius/1.4f - offset, backgroundRadius * 2)
+            color = rareAirdropWeaponColor
+            rectLine(x - radius/1.4f, y - radius/1.4f - offset,
+                     x + radius/1.4f, y + radius/1.4f - offset, radius * 2)
+          }
+          else if (("Mk14" in items)) {
+            color = WHITE
+            circle(x, y - offset, backgroundRadius * 1.2f, 10)
+            color = rareAirdropWeaponColor
+            circle(x, y - offset, radius * 1.2f, 10)
+          } 
+          else if ("M249" in items || "AUG" in items) {
+            color = WHITE
+            triangle(x - triBackRadius, y - triBackRadius - offset,
+                    x - triBackRadius, y + triBackRadius - offset,
+                    x + triBackRadius, y - triBackRadius - offset)
+            color = rareAirdropWeaponColor
+            triangle(x - triRadius, y - triRadius - offset,
+                    x - triRadius, y + triRadius - offset,
+                    x + triRadius, y - triRadius - offset)
+          }
+          else if (("Groza" in items)) {
+            color = WHITE
+            triangle(x - triBackRadius, y - triBackRadius - offset,
+                    x + triBackRadius, y + triBackRadius - offset,
+                    x + triBackRadius, y - triBackRadius - offset)
+            color = rareAirdropWeaponColor
+            triangle(x - triRadius, y - triRadius - offset,
+                    x + triRadius, y + triRadius - offset,
+                    x + triRadius, y - triRadius - offset)
+          }
+        }
+
+
+        if ("armor3" in items || "helmet3" in items) {
+          val finalColor = when {
+            "helmet3" in items -> rareHelmetColor
+            "armor3" in items -> rareArmorColor
+            "8x" in items -> rare8xColor
+            else -> normalItemColor
+          }
+          color = BLACK
+          rect(x - backgroundRadius, y - backgroundRadius, backgroundRadius * 2, backgroundRadius * 2)
+          color = finalColor
+          rect(x - radius, y - radius, radius * 2, radius * 2)
+        }
+      }
+  }
   
   private fun ShapeRenderer.drawItem() {
     droppedItemLocation.values
@@ -820,75 +902,28 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
         val triBackRadius = backgroundRadius * 1.2f + 10f
         val triRadius = radius * 1.2f
 
-        if (("bag2" in items || "helmet2" in items || "armor2" in items) && (filterLvl2 == 1)) {
+        if ("heal" in items || "drink" in items || "bag3" in items || "8x" in items || "4x" in items) {
           color = BLACK
-          triangle(x - 4 - triBackRadius, y + 4 - triBackRadius,
-                  x - 4 - triBackRadius, y + 4 + triBackRadius,
-                  x - 4 + triBackRadius, y + 4- triBackRadius)
+          rect(x - backgroundRadius, y - backgroundRadius, backgroundRadius * 2, backgroundRadius * 2)
           color = finalColor
-          triangle(x - 4 - triRadius, y + 4 - triRadius,
-                  x - 4 - triRadius, y + 4 + triRadius,
-                  x - 4 + triRadius, y + 4 - triRadius)
-        } 
+          rect(x - radius, y - radius, radius * 2, radius * 2)
         
-        if (("reddot" in items || "holo" in items || "2x" in items) && (filterScope == 1)) {
-          color = BLACK
-          triangle(x + 4 - triBackRadius, y + 4 - triBackRadius,
-                  x + 4 - triBackRadius, y + 4 + triBackRadius,
-                  x + 4 + triBackRadius, y + 4 - triBackRadius)
-          color = finalColor
-          triangle(x + 4 - triRadius, y + 4 - triRadius,
-                  x + 4 - triRadius, y + 4 + triRadius,
-                  x + 4 + triRadius, y + 4 - triRadius)
-        }
-        
-        if (filterAttach == 1) {
-          if (("AR_Extended" in items || "SR_Extended" in items)) {
-            color = BLACK
-            rect(x + 4 - backgroundRadius, y - 4 - backgroundRadius, backgroundRadius * 2, backgroundRadius * 2)
-            color = finalColor
-            rect(x + 4 - radius, y - 4 - radius, radius * 2, radius * 2)
-          } 
-          else if (("AR_Suppressor" in items || "SR_Suppressor" in items)) {
-            color = BLACK
-            circle(x + 4, y - 4, backgroundRadius * 1.2f, 10)
-            color = finalColor
-            circle(x + 4, y - 4, radius * 1.2f, 10)
-          } 
-          else if (("AR_Composite" in items || "CheekPad" in items)) {
-            color = BLACK
-            triangle(x + 4 - triBackRadius, y - 4 - triBackRadius,
-                    x + 4 - triBackRadius, y - 4 + triBackRadius,
-                    x + 4 + triBackRadius, y - 4 - triBackRadius)
-            color = finalColor
-            triangle(x + 4 - triRadius, y - 4 - triRadius,
-                    x + 4 - triRadius, y - 4 + triRadius,
-                    x + 4 + triRadius, y - 4 - triRadius)
-          }
-        }
 
-        if (filterWeapon == 1) {
-          if (("k98" in items || "m416" in items)) {
+        } else if ("bag2" in items || "helmet2" in items || "armor2" in items) {
+          if (filterLvl2 == 1) {
             color = BLACK
-            rect(x - backgroundRadius, y - backgroundRadius, backgroundRadius * 2, backgroundRadius * 2)
+            triangle(x - triBackRadius, y - triBackRadius,
+                    x - triBackRadius, y + triBackRadius,
+                    x + triBackRadius, y- triBackRadius)
             color = finalColor
-            rect(x - radius, y - radius, radius * 2, radius * 2)
-          } 
-          else if (("scar" in items)) {
-            color = BLACK
-            rectLine(x - backgroundRadius/1.4f, y - backgroundRadius/1.4f,
-                     x + backgroundRadius/1.4f, y + backgroundRadius/1.4f, backgroundRadius * 2)
-            color = finalColor
-            rectLine(x - radius/1.4f, y - radius/1.4f,
-                     x + radius/1.4f, y + radius/1.4f, radius * 2)
+            triangle(x - triRadius, y - triRadius,
+                    x - triRadius, y + triRadius,
+                    x + triRadius, y - triRadius)
           }
-          else if (("m16" in items)) {
-            color = BLACK
-            circle(x, y, backgroundRadius * 1.2f, 10)
-            color = finalColor
-            circle(x, y, radius * 1.2f, 10)
-          } 
-          else if (("ak" in items)) {
+         
+        
+        } else if ("reddot" in items || "holo" in items || "2x" in items) {
+          if (filterScope == 1) {
             color = BLACK
             triangle(x - triBackRadius, y - triBackRadius,
                     x - triBackRadius, y + triBackRadius,
@@ -898,7 +933,71 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
                     x - triRadius, y + triRadius,
                     x + triRadius, y - triRadius)
           }
-          else if (("dp28" in items)) {
+        
+        
+        } else if ("AR_Extended" in items || "SR_Extended" in items) {
+          if (filterAttach == 1) {   
+            color = BLACK
+            rect(x - backgroundRadius, y - backgroundRadius, backgroundRadius * 2, backgroundRadius * 2)
+            color = finalColor
+            rect(x - radius, y - radius, radius * 2, radius * 2)
+          }
+        } else if ("AR_Suppressor" in items || "SR_Suppressor" in items) {
+          if (filterAttach == 1) {
+            color = BLACK
+            circle(x, y, backgroundRadius * 1.2f, 10)
+            color = finalColor
+            circle(x, y, radius * 1.2f, 10)
+          }
+        } else if ("AR_Composite" in items || "CheekPad" in items) {
+          if (filterAttach == 1) {
+            color = BLACK
+            triangle(x - triBackRadius, y - triBackRadius,
+                    x - triBackRadius, y + triBackRadius,
+                    x + triBackRadius, y - triBackRadius)
+            color = finalColor
+            triangle(x - triRadius, y - triRadius,
+                    x - triRadius, y + triRadius,
+                    x + triRadius, y - triRadius)
+          }
+
+
+        } else if ("k98" in items || "m416" in items) {
+          if (filterWeapon == 1) {
+            color = BLACK
+            rect(x - backgroundRadius, y - backgroundRadius, backgroundRadius * 2, backgroundRadius * 2)
+            color = finalColor
+            rect(x - radius, y - radius, radius * 2, radius * 2)
+          }
+        } else if ("scar" in items) {
+          if (filterWeapon == 1) {
+            color = BLACK
+            rectLine(x - backgroundRadius/1.4f, y - backgroundRadius/1.4f,
+                     x + backgroundRadius/1.4f, y + backgroundRadius/1.4f, backgroundRadius * 2)
+            color = finalColor
+            rectLine(x - radius/1.4f, y - radius/1.4f,
+                     x + radius/1.4f, y + radius/1.4f, radius * 2)
+          }
+        } else if ("m16" in items) {
+          if (filterWeapon == 1) {
+            color = BLACK
+            circle(x, y, backgroundRadius * 1.2f, 10)
+            color = finalColor
+            circle(x, y, radius * 1.2f, 10)
+          }
+        } else if ("ak" in items) {
+          if (filterWeapon == 1) {
+            color = BLACK
+            triangle(x - triBackRadius, y - triBackRadius,
+                    x - triBackRadius, y + triBackRadius,
+                    x + triBackRadius, y - triBackRadius)
+            color = finalColor
+            triangle(x - triRadius, y - triRadius,
+                    x - triRadius, y + triRadius,
+                    x + triRadius, y - triRadius)
+          }
+        } else if (("dp28" in items)) {
+          if (filterWeapon == 1) {
             color = BLACK
             triangle(x - triBackRadius, y - triBackRadius,
                     x + triBackRadius, y + triBackRadius,
@@ -906,16 +1005,8 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
             color = finalColor
             triangle(x - triRadius, y - triRadius,
                     x + triRadius, y + triRadius,
-                    x + triRadius, y - triRadius)
+                  x + triRadius, y - triRadius)
           }
-        }
-
-        if ("helmet3" in items || "armor3" in items || "bag3" in items || 
-            "8x" in items || "4x" in items || "heal" in items || "drink" in items) {
-          color = BLACK
-          rect(x - 4 - backgroundRadius, y - 4 - backgroundRadius, backgroundRadius * 2, backgroundRadius * 2)
-          color = finalColor
-          rect(x - 4 - radius, y - 4 - radius, radius * 2, radius * 2)
         }
       }
   }
@@ -964,6 +1055,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
         "Saiga12" in weapon.toString() -> "  S12K"
         "Berreta686" in weapon.toString() -> "  S686"
         "Winchester" in weapon.toString() -> "  S1897"
+        "Crossbow" in weapon.toString() -> "  Xbow"
         "G18" in weapon.toString() || "M1911" in weapon.toString() || "M9" in weapon.toString() ||
         "Nagant" in weapon.toString() || "Rhino" in weapon.toString() || "Sawnoff" in weapon.toString() -> "  Pistol"
         "Crowbar" in weapon.toString() || "Machete" in weapon.toString() || "Sickle" in weapon.toString() -> "  Melee"
@@ -1011,6 +1103,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
           for(j in -1..1)
             littleFontShadow.draw(spriteBatch, "$runningTime", x + i, windowHeight - y + j)
         littleFont.draw(spriteBatch, "$runningTime", x, windowHeight - y)
+        /*
         val remainingTime = (TotalWarningDuration - ElapsedWarningDuration).toInt()
         if (remainingTime == 60 && runningTime > remainingTime) {
           val currentTime = System.currentTimeMillis()
@@ -1019,6 +1112,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
             alarmSound.play()
           }
         }
+        */
       }
     }
   }
