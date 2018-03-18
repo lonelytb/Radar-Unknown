@@ -35,6 +35,7 @@ import pubg.radar.struct.cmd.ActorCMD.actorHealth
 import pubg.radar.struct.cmd.ActorCMD.actorGroggyHealth
 import pubg.radar.struct.cmd.ActorCMD.actorWithPlayerState
 import pubg.radar.struct.cmd.ActorCMD.playerStateToActor
+//import pubg.radar.struct.cmd.AirDropComponentCMD.airdropID
 import pubg.radar.struct.cmd.GameStateCMD.ElapsedWarningDuration
 import pubg.radar.struct.cmd.GameStateCMD.MatchElapsedMinutes
 import pubg.radar.struct.cmd.GameStateCMD.NumAlivePlayers
@@ -84,6 +85,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
     //selfCoordsSniffer.setZero()
     selfCoords.setZero()
     selfAttachTo = null
+    airdropList.clear()
   }
   
   override fun onGameOver() {
@@ -188,7 +190,6 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       if (screenOffsetX != 0f || screenOffsetY != 0f) {
         screenOffsetX = 0f
         screenOffsetY = 0f
-        // showCompass = 1
         return true
       } else {
         if (camera.zoom < 0.1f) {
@@ -417,6 +418,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
     if (selfDir.len() < 1e-8)
       selfDir.set(preDirection)
     */
+
     // MOVE CAMERA
     camera.position.set(selfX + screenOffsetX, selfY + screenOffsetY, 0f)
     camera.update()
@@ -747,13 +749,14 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
     }
   }
   
+  var airdropList = mutableListOf<Int>()
   private fun ShapeRenderer.drawAirDrop(zoom: Float) {
     airDropLocation.values.forEach {
       val (x, y) = it
       val backgroundRadius = (airDropRadius + 1500) * zoom
       val airDropRadius = airDropRadius * zoom
       val (selfX, selfY) = selfCoords
-      
+
       color = BLACK
       rect(x - backgroundRadius, y - backgroundRadius, backgroundRadius * 2, backgroundRadius * 2)
       color = airDropBlueColor
@@ -794,6 +797,17 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
         circle(inMapX, inMapY, airDropRadius * 2f, 10)
         color = airDropRedEdgeColor
         circle(inMapX, inMapY, airDropRadius * 1.3f, 10)
+
+        // Airdrop Notification (change to UID later)
+        val mark = (x/400).toInt()
+        if (airdropList.contains(mark)) {
+          //println(mark)
+        }
+        else {
+          airdropList.add(mark)
+          alarmSound.play()
+        }
+    
       }
     }
   }
@@ -831,7 +845,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
             color = rareAirdropWeaponColor
             circle(x, y - offset, radius * 1.2f, 10)
           } 
-          else if ("M249" in items || "AUG" in items) {
+          else if ("M249" in items) {
             color = WHITE
             triangle(x - triBackRadius, y - triBackRadius - offset,
                     x - triBackRadius, y + triBackRadius - offset,
@@ -839,6 +853,16 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
             color = rareAirdropWeaponColor
             triangle(x - triRadius, y - triRadius - offset,
                     x - triRadius, y + triRadius - offset,
+                    x + triRadius, y - triRadius - offset)
+          }
+          else if (("AUG" in items)) {
+            color = WHITE
+            triangle(x - triBackRadius, y + triBackRadius - offset,
+                    x + triBackRadius, y + triBackRadius - offset,
+                    x + triBackRadius, y - triBackRadius - offset)
+            color = rareAirdropWeaponColor
+            triangle(x - triRadius, y + triRadius - offset,
+                    x + triRadius, y + triRadius - offset,
                     x + triRadius, y - triRadius - offset)
           }
           else if (("Groza" in items)) {
