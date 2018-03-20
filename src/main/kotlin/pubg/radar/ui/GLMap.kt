@@ -1278,8 +1278,6 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
     val playerRadius = playerRadius * zoom
     val directionRadius = directionRadius * zoom
 
-
-
     val (actor, x, y, dir) = actorInfo
     val attach = actor?.attachChildren?.values?.firstOrNull()
 
@@ -1293,18 +1291,6 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
     val (airx, airy) = Vector2(x, y).mapToWindow()
 
     //if (actor?.netGUID == selfID) return
-    color = BLACK
-    circle(x, y, backgroundRadius, 10)
-
-    color = when {
-      isTeamMate(actor) -> teamColor
-      attach == null -> pColor
-      attach == selfID -> selfColor
-      isTeamMate(actors[attach]) -> teamColor
-      else -> pColor
-      }
-    circle(x, y, playerRadius, 10)
-    
     
     if (drawSight) {
       if (playerID == null) {
@@ -1325,12 +1311,36 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       }
     }
 
-    // DRAW HEALTH
+    // DRAW SELF
+    if (playerID == null) {
+      color = BLACK
+      circle(x, y, backgroundRadius, 10)    
+      color = selfColor
+      circle(x, y, playerRadius, 10)  
+    }
+    
+
+    // DRAW PLAYER
+    /*
+    if (actor?.isACharacter == false) { // In parachute or plane
+      color = BLACK
+      circle(x, y, backgroundRadius, 10)    
+      color = when {
+        isTeamMate(actor) -> teamColor
+        attach == null -> pColor
+        attach == selfID -> selfColor
+        //playerID == null -> selfColor
+        isTeamMate(actors[attach]) -> teamColor
+        else -> pColor
+      }
+      circle(x, y, playerRadius, 10)  
+    }
+    */ 
+
     if (actor != null && actor.isACharacter) {
       val health = actorHealth[actor.netGUID] ?: 100f
       val groggyHealth = actorGroggyHealth[actor.netGUID] ?: 101f
-      val playerIsGroggying = isGroggying[actor.netGUID] ?: false
-      val playerIsReviving = isReviving[actor.netGUID] ?: false
+      
       val width = healthBarWidth * zoom
       val widthBackground = (healthBarWidth + 2000) * zoom
       val height = healthBarHeight * zoom
@@ -1338,21 +1348,12 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       val positonY = y + playerRadius + heightBackground / 2
       val healthWidth = (health / 100.0 * width).toFloat()
 
-      color = BLACK
-      rectLine(x - widthBackground / 2 , positonY, x + widthBackground / 2, positonY, heightBackground)
-
-      /* Old method
-      color = when {
-        health > 84.4f -> Color(0.16f, 0.86f, 0.16f, 1f)  // Green
-        health > 59.4f -> YELLOW                          // Lv.3 Helmet Kar98 1 headshot to kill
-        //health > 39.6f -> Color(0.6f, 0.7f, 0f, 1f)     // Lv.3 Vest Rifle 3 bodyshots
-        health > 19.8f -> ORANGE                          // Lv.3 Vest Rifle 2 bodyshots
-        else -> RED                                       // Lv.3 Vest Rifle 1 bodyshot
-      }
-      */
       val playerStateGUID = actorWithPlayerState[actor.netGUID]
       val head = playerHead[playerStateGUID] ?: " "
       val armor = playerArmor[playerStateGUID] ?: " "
+
+      color = BLACK
+      rectLine(x - widthBackground / 2 , positonY, x + widthBackground / 2, positonY, heightBackground)
       
       if ("3" in armor) {
         if ("3" in head) {
@@ -1375,7 +1376,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
         if ("3" in head) {
           color = when {
             health > 84f -> Color(0.00f, 0.93f, 0.93f, 1f)    
-            health > 78f -> Color(0.16f, 0.86f, 0.16f, 1f)    // 1 headshot by kar98
+            health > 78f -> Color(0.16f, 0.86f, 0.16f, 1f)    // 1 headshot
             health > 52f -> YELLOW                            // 3 bodyshots
             health > 26f -> ORANGE                            // 2 bodyshots
             else -> RED                                       // 1 bodyshot
@@ -1419,20 +1420,35 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
           }
         }
       }
-
       rectLine(x - width / 2, positonY, x - width / 2 + healthWidth, positonY, height)
 
+      val playerIsGroggying = isGroggying[actor.netGUID] ?: false
+      val playerIsReviving = isReviving[actor.netGUID] ?: false
+
+      color = BLACK
+      circle(x, y, backgroundRadius, 10)
+      
       if (playerIsGroggying == true) {
         color = if (isTeamMate(actor))
           CYAN
         else
-          Color(0.3f, 0.3f, 0.3f, 0.8f) // Grey
+          Color(0.3f, 0.3f, 0.3f, 1f) // Grey
         circle(x, y, playerRadius, 10)
       } else if (playerIsReviving == true) {
         color = if (isTeamMate(actor))
           CYAN
         else
           ORANGE
+        circle(x, y, playerRadius, 10)
+      } else {
+        color = when {
+          isTeamMate(actor) -> teamColor
+          attach == null -> pColor
+          //attach == selfID -> selfColor
+          //playerID == null -> pColor
+          isTeamMate(actors[attach]) -> teamColor
+          else -> pColor
+          }
         circle(x, y, playerRadius, 10)
       }
 
@@ -1467,6 +1483,8 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       circle(inMapX, inMapY, backgroundRadius, 10)      
       color = if (isTeamMate(actor))
         teamEdgeColor
+      else if (playerID == null)
+        selfColor
       else
         playerEdgeColor
       circle(inMapX, inMapY, playerRadius, 10)
