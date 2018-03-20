@@ -46,6 +46,10 @@ val boatColor = Color(1f, 0.49f, 0f, 0.9f)  //orange
 val planeColor = Color.ORANGE!!
 
 val sightColor = Color(1f, 1f, 1f, 0.5f)
+val selfSightColor = Color(0.3f, 1f, 0.3f, 0.4f)
+val teamSightColor = Color(1f, 1f, 0.3f, 0.4f)
+val enemySightColor = Color(1f, 0.3f, 0.3f, 0.5f)
+
 val pinColor = Color(1f, 1f, 0f, 1f)
 
 val aimLineColor = Color(0f, 0f, 1f, 1f)
@@ -53,12 +57,13 @@ val attackLineColor = Color(1.0f, 0f, 0f, 1f)
 val safeDirectionColor = Color(0.22f, 0.32f, 0.95f, 1f)  //blue
 
 val visionColor = Color(1f, 1f, 1f, 0.1f)  //white
-val redZoneColor = Color(1f, 0f, 0f, 0.2f)
+val redZoneColor = Color(1f, 0f, 0f, 0.1f)
 val safeZoneColor = Color(1f, 1f, 1f, 0.9f)
 
 val normalItemColor = Color(0.87f, 0.01f, 1.0f, 0.99f)  //
-val rare4xColor = Color(0.31f,	0.51f,	0.71f, 0.99f)  //dodgerblue
+val rare4xColor = Color(0.41f,	0.61f,	0.91f, 0.99f)  //dodgerblue
 val rare8xColor = Color(0.7f, 1.0f, 1.0f, 0.99f)  //Cyan
+val rare15xColor = Color(0.8f, 0.8f, 0.8f, 0.99f)  //Cyan
 
 val rareBagColor = Color(0.01f, 0.01f, 0.7f, 0.99f)  //blue
 val rareHelmetColor = Color(1.0f, 0.01f, 1.0f, 0.99f)  //magenta
@@ -75,6 +80,8 @@ val rareSRAttachColor = Color(1.00f, 0.68f, 0.73f, 0.99f)  //LightPink1
 
 val healItemColor = Color.LIME!! /*Color(0.16f, 0.86f, 0.16f, 0.99f)*/  //green
 val drinkItemColor = Color(0.20f, 0.55f, 0.20f, 0.99f)  //limeGreen
+
+val ghillieColor = Color(0.20f, 0.20f, 0.20f, 0.99f)
 
 val airDropBlueColor = Color(0.0f, 0.75f, 0.99f, 1f)
 val airDropRedColor = Color(0.90f, 0.21f, 0.21f, 1f)  

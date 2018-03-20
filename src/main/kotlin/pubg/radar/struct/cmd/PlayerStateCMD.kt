@@ -10,6 +10,9 @@ import pubg.radar.struct.cmd.CMD.propertyInt
 import pubg.radar.struct.cmd.CMD.propertyNetId
 import pubg.radar.struct.cmd.CMD.propertyObject
 import pubg.radar.struct.cmd.CMD.propertyString
+import pubg.radar.struct.Item.Companion.simplify
+import pubg.radar.util.DynamicArray
+import pubg.radar.util.tuple2
 import java.util.concurrent.*
 
 object PlayerStateCMD: GameListener {
@@ -34,6 +37,10 @@ object PlayerStateCMD: GameListener {
   val attacks = ConcurrentLinkedQueue<Pair<NetworkGUID, NetworkGUID>>()//A -> B
   var selfID = NetworkGUID(0)
   var selfStateID = NetworkGUID(0)
+  var equipableItems = DynamicArray<tuple2<String,Float>?>(3,0)
+  val playerHead = ConcurrentHashMap<NetworkGUID, String>()
+  val playerArmor = ConcurrentHashMap<NetworkGUID, String>()
+  val playerBack = ConcurrentHashMap<NetworkGUID, String>()
  
   fun process(actor: Actor, bunch: Bunch, repObj: NetGuidCacheObject?, waitingHandle: Int, data: HashMap<String, Any?>): Boolean {
     with(bunch) {
@@ -173,6 +180,57 @@ object PlayerStateCMD: GameListener {
         42 -> {
           val HeadShots = propertyInt()
 //          println("${playerNames[actor.netGUID]}${actor.netGUID} HeadShots=$HeadShots")
+        }
+        43 -> {//ReplicatedEquipableItems
+          val arraySize = readUInt16()
+          equipableItems.resize(arraySize)
+          var index = readIntPacked()
+          while (index != 0) {
+            val idx = index - 1
+            val arrayIdx = idx / 2
+            val structIdx = idx % 2
+            val element = equipableItems[arrayIdx] ?: tuple2("",0f)
+            when (structIdx) {
+              0 -> {
+                val (guid,equipableItemClass) = readObject()
+                if (equipableItemClass != null) {
+                  element._1 = simplify(equipableItemClass.pathName)
+                  if ("Head" in element._1.toString()) {
+                    playerHead[actor.netGUID] = when {
+                      "Lv1" in element._1.toString() -> "1"
+                      "Lv2" in element._1.toString() -> "2"
+                      "Lv3" in element._1.toString() -> "3"
+                      else -> "_"
+                    }
+                  } else if ("Armor" in element._1.toString()) {
+                    playerArmor[actor.netGUID] = when {
+                      "Lv1" in element._1.toString() -> "1"
+                      "Lv2" in element._1.toString() -> "2"
+                      "Lv3" in element._1.toString() -> "3"
+                      else -> "_"
+                    }
+                  } else if ("Back" in element._1.toString()) {
+                    playerBack[actor.netGUID] = when {
+                      "Lv1" in element._1.toString() -> "1"
+                      "Lv2" in element._1.toString() -> "2"
+                      "Lv3" in element._1.toString() -> "3"
+                      else -> "_"
+                    }
+                  }
+                }
+                //println("${actor.netGUID} = ${playerHead[actor.netGUID]}/${playerArmor[actor.netGUID]}")
+                val a = guid
+              }
+              1 -> {
+                val durability = readFloat()
+                element._2 = durability
+                val a = durability
+              }
+            }
+            equipableItems[arrayIdx]=element
+            index=readIntPacked()
+          }
+          return true
         }
         44 -> {//bIsInAircraft
           val bIsInAircraft = propertyBool()

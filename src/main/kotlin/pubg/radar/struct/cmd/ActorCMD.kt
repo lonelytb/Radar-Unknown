@@ -39,12 +39,16 @@ object ActorCMD: GameListener {
     playerStateToActor.clear()
     actorHealth.clear()
     actorGroggyHealth.clear()
+    isGroggying.clear()
+    isReviving.clear()
   }
   
   val actorWithPlayerState = ConcurrentHashMap<NetworkGUID, NetworkGUID>()
   val playerStateToActor = ConcurrentHashMap<NetworkGUID, NetworkGUID>()
   val actorHealth = ConcurrentHashMap<NetworkGUID, Float>()
   val actorGroggyHealth = ConcurrentHashMap<NetworkGUID, Float>()
+  val isGroggying = ConcurrentHashMap<NetworkGUID, Boolean>()
+  val isReviving = ConcurrentHashMap<NetworkGUID, Boolean>()
   
   fun process(actor: Actor, bunch: Bunch, repObj: NetGuidCacheObject?, waitingHandle: Int, data: HashMap<String, Any?>): Boolean {
     with(bunch) {
@@ -348,12 +352,17 @@ object ActorCMD: GameListener {
           val b = result
         }
         82 -> {
-          val result = propertyBool()
-          val b = result
+          val bIsGroggying=propertyBool()
+          val b = bIsGroggying
+          isGroggying[actor.netGUID] = bIsGroggying
+          //println("ActorCMD 82 bIsGroggying ? $b")
         }
         83 -> {
-          val result = propertyBool()
-          val b = result
+          val bIsReviving=propertyBool()
+          val b=bIsReviving
+          //actorGroggyHealth[actor.netGUID] = GroggyHealth
+          isReviving[actor.netGUID] = bIsReviving
+          
         }
         84 -> {
           val result = propertyBool()
@@ -409,9 +418,12 @@ object ActorCMD: GameListener {
         97 -> {
           val GroggyHealthMax = propertyFloat()
         }
+        /*
         98 -> {
           val BoostGauge = propertyFloat()
+          actor.boostGauge=BoostGauge
         }
+        */
         99 -> {
           val BoostGaugeMax = propertyFloat()
         }

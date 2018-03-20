@@ -251,7 +251,7 @@ class Sniffer {
     
     fun sniffLocationOffline(): Thread {
       return thread(isDaemon = true) {
-        val files = arrayOf("C:\\Misc\\pubg.pcap")
+        val files = arrayOf("C:\\Misc\\0.pcap")
         for (file in files) {
           val handle = Pcaps.openOffline(file)
           

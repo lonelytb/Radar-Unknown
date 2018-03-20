@@ -3,6 +3,7 @@ package pubg.radar.struct
 import com.badlogic.gdx.math.Vector3
 import pubg.radar.struct.Archetype.*
 import pubg.radar.struct.Archetype.Companion.fromArchetype
+import pubg.radar.util.DynamicArray
 import java.util.concurrent.ConcurrentHashMap
 
 enum class Archetype { //order matters, it affects the order of drawing

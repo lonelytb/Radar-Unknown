@@ -37,7 +37,9 @@ class Item {
                     "Holosight" to "holo",
                     "Aimpoint" to "2x",
                     "ACOG" to "4x",
-                    "CQBSS" to "8x"))),
+                    "CQBSS" to "8x",
+                    "PM2" to "15x"))),
+        "Ghillie" to "ghillie",
         "Boost" to "drink",
         "Heal" to mapOf(
             "FirstAid" to "heal",
@@ -98,6 +100,23 @@ class Item {
       } catch (e: Exception) {
       }
       return null
+    }
+
+    fun simplify(description:String):String {
+        try {
+            val words = description.split("_")
+            var c = category
+            for (word in words) {
+                if (word !in c)
+                    return description
+                val sub:Any? = c[word]
+                if (sub is String)
+                    return sub
+                c = sub as Map<String, Any>
+            }
+        } catch (e:Exception) {
+        }
+        return description
     }
     
   }
