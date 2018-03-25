@@ -4,3 +4,4 @@ src/main/resources/images/bg_compass3.png
 .DS_Store
 8192_01_01J.png
 Thumbs.db
+.gitignore
