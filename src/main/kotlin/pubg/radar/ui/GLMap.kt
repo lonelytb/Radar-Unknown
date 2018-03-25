@@ -62,7 +62,6 @@ import pubg.radar.struct.cmd.PlayerStateCMD.selfStateID
 import pubg.radar.struct.cmd.PlayerStateCMD.teamNumbers
 import pubg.radar.struct.cmd.TeamCMD.team
 import pubg.radar.struct.cmd.TeamCMD.teamMapMarkerPosition
-import pubg.radar.struct.cmd.TeamCMD.teamShowMapMarker
 import pubg.radar.struct.cmd.TeamCMD.teamMemberNumber
 import pubg.radar.util.tuple4
 import java.util.*
@@ -80,8 +79,8 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
     operator fun Vector2.component1(): Float = x
     operator fun Vector2.component2(): Float = y
 
-    val spawnErangel = Vector2(795548.3f, 17385.875f)
-    val spawnDesert = Vector2(78282f, 731746f)    
+    //val spawnErangel = Vector2(795548.3f, 17385.875f)
+    //val spawnDesert = Vector2(78282f, 731746f)    
   }
   
   init {
@@ -102,7 +101,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
   
   override fun onGameOver() {
     camera.zoom = 1 / 5f
-    
+  
     aimStartTime.clear()
     attackLineStartTime.clear()
     //pinLocation.setZero()
@@ -612,7 +611,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       //circle(pinLocation, pinRadius * zoom, 10)
       drawAirDrop(zoom)
       drawItem()
-      drawAirdropWeapon()
+      //drawAirdropWeapon()
       drawAPawn(typeLocation, selfX, selfY, zoom, currentTime)
       drawCorpse()
       // DRAW SELF
@@ -762,15 +761,6 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       val (x, y) = it
       val backgroundRadius = (corpseRadius + 50f)
       val radius = corpseRadius
-      /*
-      color = BLACK
-      rect(x - backgroundRadius, y - backgroundRadius, backgroundRadius * 2, backgroundRadius * 2)
-      color = corpseColor
-      rect(x - radius, y - radius, radius * 2, radius * 2)
-      color = BLACK
-      rectLine(x - radius, y, x + radius, y, 50f)
-      rectLine(x, y - radius, x, y + radius, 50f)
-      */
       color = BLACK
       rectLine(x - backgroundRadius, y - backgroundRadius, x + backgroundRadius, y + backgroundRadius, 300f)
       rectLine(x + backgroundRadius, y - backgroundRadius, x - backgroundRadius, y + backgroundRadius, 300f)
@@ -845,6 +835,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
     }
   }
 
+  /*
   private fun ShapeRenderer.drawAirdropWeapon() { // Can be merged in drawItem
     droppedItemLocation.values
       .forEach {
@@ -909,12 +900,10 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
                     x + triRadius - offsetX, y + triRadius - offsetY,
                     x + triRadius - offsetX, y - triRadius - offsetY)
           }
-        }
-
-
-        
+        }        
       }
   }
+  */
   
   private fun ShapeRenderer.drawItem() {
     droppedItemLocation.values
@@ -973,8 +962,8 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
                     x - triRadius, y + triRadius,
                     x + triRadius, y - triRadius)
           }
-         
         
+
         } else if ("reddot" in items || "holo" in items || "2x" in items) {
           if (filterScope == 1) {
             color = BLACK
@@ -986,6 +975,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
                     x - triRadius, y + triRadius,
                     x + triRadius, y - triRadius)
           }
+          
 
         } else if ("AR_Extended" in items || "SR_Extended" in items) {
           if (filterAttach == 1) {   
@@ -1061,7 +1051,8 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
           }
         
         } else if ("4x" in items || "8x" in items || "15x" in items  || "ghillie" in items || 
-                   "bag3" in items || "armor3" in items || "helmet3" in items) {
+                   "bag3" in items || "armor3" in items || "helmet3" in items || "AWM" in items || 
+                   "M24" in items || "Mk14" in items  || "AUG" in items || "Groza" in items) {
           val markX = (x / 200).toInt()
           val markY = (y / 200).toInt()
           if (airdropListX.contains(markX) && airdropListY.contains(markY)) {
@@ -1076,10 +1067,62 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
               "bag3" in items -> {offsetX *= 0; offsetY *= -1}
               "armor3" in items -> {offsetX *= -1; offsetY *= -1}
             }
-            color = WHITE
-            rect(x - backgroundRadius - offsetX, y - backgroundRadius - offsetY, backgroundRadius * 2, backgroundRadius * 2)
-            color = finalColor
-            rect(x - radius - offsetX, y - radius - offsetY, radius * 2, radius * 2)
+            if ("AWM" in items) {
+              color = WHITE
+              rect(x - backgroundRadius - offsetX, y - backgroundRadius - offsetY, backgroundRadius * 2, backgroundRadius * 2)
+              color = rareAirdropWeaponColor
+              rect(x - radius - offsetX, y - radius - offsetY, radius * 2, radius * 2)
+            } 
+            else if ((items in "M24")) {
+              color = WHITE
+              rectLine(x - backgroundRadius/1.4f - offsetX, y - backgroundRadius/1.4f - offsetY,
+                       x + backgroundRadius/1.4f - offsetX, y + backgroundRadius/1.4f - offsetY, backgroundRadius * 2)
+              color = rareAirdropWeaponColor
+              rectLine(x - radius/1.4f - offsetX, y - radius/1.4f - offsetY,
+                       x + radius/1.4f - offsetX, y + radius/1.4f - offsetY, radius * 2)
+            }
+            else if (("Mk14" in items)) {
+              color = WHITE
+              circle(x - offsetX, y - offsetY, backgroundRadius, 10)
+              color = rareAirdropWeaponColor
+              circle(x - offsetX, y - offsetY, radius, 10)
+            } 
+            else if ("M249" in items) {
+              color = WHITE
+              triangle(x - triBackRadius - offsetX, y - triBackRadius - offsetY,
+                      x - triBackRadius - offsetX, y + triBackRadius - offsetY,
+                      x + triBackRadius - offsetX, y - triBackRadius - offsetY)
+              color = rareAirdropWeaponColor
+              triangle(x - triRadius - offsetX, y - triRadius - offsetY,
+                      x - triRadius - offsetX, y + triRadius - offsetY,
+                      x + triRadius - offsetX, y - triRadius - offsetY)
+            }
+            else if (("AUG" in items)) {
+              color = WHITE
+              triangle(x - triBackRadius - offsetX, y + triBackRadius - offsetY,
+                      x + triBackRadius - offsetX, y + triBackRadius - offsetY,
+                      x + triBackRadius - offsetX, y - triBackRadius - offsetY)
+              color = rareAirdropWeaponColor
+              triangle(x - triRadius - offsetX, y + triRadius - offsetY,
+                      x + triRadius - offsetX, y + triRadius - offsetY,
+                      x + triRadius - offsetX, y - triRadius - offsetY)
+            }
+            else if (("Groza" in items)) {
+              color = WHITE
+              triangle(x - triBackRadius - offsetX, y - triBackRadius - offsetY,
+                      x + triBackRadius - offsetX, y + triBackRadius - offsetY,
+                      x + triBackRadius - offsetX, y - triBackRadius - offsetY)
+              color = rareAirdropWeaponColor
+              triangle(x - triRadius - offsetX, y - triRadius - offsetY,
+                      x + triRadius - offsetX, y + triRadius - offsetY,
+                      x + triRadius - offsetX, y - triRadius - offsetY)
+            }
+            else {
+              color = WHITE
+              rect(x - backgroundRadius - offsetX, y - backgroundRadius - offsetY, backgroundRadius * 2, backgroundRadius * 2)
+              color = finalColor
+              rect(x - radius - offsetX, y - radius - offsetY, radius * 2, radius * 2)
+            }
           }
           else {
             color = BLACK
@@ -1422,18 +1465,16 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       }
     }
 
+    // DRAW SELF
     try {
-      // DRAW SELF
       if (playerID == null) {
         color = BLACK
         circle(x, y, backgroundRadius, 10)    
         color = pColor
         circle(x, y, playerRadius, 10)  
-      }
-    
+      } 
 
       // DRAW PLAYER
-
       if (actor != null && actor.isACharacter) {
         val health = actorHealth[actor.netGUID] ?: 100f
         val groggyHealth = actorGroggyHealth[actor.netGUID] ?: 101f
@@ -1450,6 +1491,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
         val head = playerHead[playerStateGUID] ?: " "
         val armor = playerArmor[playerStateGUID] ?: " "
 
+        // DRAW HEALTHBAR
         color = BLACK
         rectLine(x - widthBackground / 2 , positonY, x + widthBackground / 2, positonY, heightBackground)
         
@@ -1520,6 +1562,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
         }
         rectLine(x - width / 2, positonY, x - width / 2 + healthWidth, positonY, height)
 
+        // DRAW PLAYER CIRCLE
         val playerIsGroggying = isGroggying[actor.netGUID] ?: false
         val playerIsReviving = isReviving[actor.netGUID] ?: false
         //val currentTime = System.currentTimeMillis()
@@ -1534,15 +1577,17 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
 
         val name = playerNames[playerStateGUID] ?: return
         //val sleepTime = (actor.netGUID).toString().drop(18).dropLast(1).toLong()
-        query(name, 2000)
+        query(name, 1000)
 
+        // HACKER CHECK
         var hackerCheck = 0
-        if (completedPlayerInfo.containsKey(name)) { // HACKER CHECK
+        if (completedPlayerInfo.containsKey(name)) { 
           val info = completedPlayerInfo[name]!!
           if (info.killDeathRatio > 2.5f && info.headshotKillRatio > 0.35f)
             hackerCheck = 1
         }
-      
+        
+        // PLAYER COLOR
         if (playerIsGroggying == true) {
           color = if (isTeamMate(actor))
             CYAN
@@ -1562,7 +1607,6 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
           circle(x, y, backgroundRadius, 10)
           color = Color(1.0f, 0f, 1.0f, 1f)
           circle(x, y, playerRadius, 10)
-
         /* KillThreshold method to check aimbot hacker
         } else if (numKills > killThreshold  && !isTeamMate(actor)) {
           color = BLACK
@@ -1575,7 +1619,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
           circle(x, y, backgroundRadius, 10)
           color = when {
             isTeamMate(actor) -> teamColor
-            playerID == null -> selfSightColor
+            playerID == null -> selfColor
             attach == null -> pColor
             isTeamMate(actors[attach]) -> teamColor
             else -> pColor
@@ -1624,24 +1668,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       circle(inMapX, inMapY, playerRadius, 10)
     }
   } 
-
-  /*
-  fun ShapeRenderer.drawTeamMarker(actor: Actor?) {
-    if (isTeamMate(actor)) {
-      val playerStateGUID = actorWithPlayerState[actor?.netGUID]
-      if (playerStateGUID != null) {
-        //val name = playerNames[playerStateGUID] ?: return
-        val position = teamMapMarkerPosition[playerStateGUID]
-        val show = teamShowMapMarker[playerStateGUID]
-        println(show)
-        val number = teamMemberNumber[playerStateGUID]
-        println(number)
-      }
-    }
-  }
-  */
   
-
   private fun isTeamMate(actor: Actor?): Boolean {
     if (actor != null) {
       val playerStateGUID = actorWithPlayerState[actor.netGUID]
