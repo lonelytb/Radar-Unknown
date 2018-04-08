@@ -1263,57 +1263,65 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       if (NumAliveTeams == NumAlivePlayers) 
         textTop = "$weaponAbbr  "
       var textBottom = "$angle°$distance"
+      //var textBottom = "${actor.netGUID}"
       if (isTeamMate(actor)) {
         textTop = "$weaponAbbr  "
         textBottom = "$name"
       }
       
-      if (completedPlayerInfo.containsKey(name)) { // HACKER CHECK
-        val info = completedPlayerInfo[name]!!
-        if (!isTeamMate(actor) && (info.killDeathRatio > 2.5f || info.headshotKillRatio > 0.3f)) {
-          val hackerInfo = "${(info.headshotKillRatio*100).d(0)}% ${info.killDeathRatio.d(1)}"
-          layout.setText(nameFont, hackerInfo)
-          val widthHackerInfo = layout.width
-          for(i in -1..1)
-            for(j in -1..1) 
-              nameFontShadow.draw(spriteBatch, hackerInfo, 
-                                  sx - widthHackerInfo/2 + i, windowHeight - sy + 26 + j)
-          nameBlueFont.draw(spriteBatch, hackerInfo, sx - widthHackerInfo/2, windowHeight - sy + 26)
-        }
-      }
-      
-
-      if (showPlayerGear == 1) {
-        layout.setText(nameFont, equippedHead)
-        val widthLeft = layout.width
-        layout.setText(nameFont, equippedArmor)
-        val widthRight = layout.width
-        for(i in -1..1)
-          for(j in -1..1) {
-            nameFontShadow.draw(spriteBatch, equippedHead, 
-                                sx - 14 - widthLeft/2 + i, windowHeight - sy + 1.8f + j)
-            nameFontShadow.draw(spriteBatch, equippedArmor, 
-                                sx + 14 - widthRight/2 + i, windowHeight - sy + 1.8f + j)
+      try {
+        val playerIsGroggying: Boolean = isGroggying[actor.netGUID] ?: false
+        if (playerIsGroggying == false) {
+          if (completedPlayerInfo.containsKey(name)) { // HACKER CHECK
+            val info = completedPlayerInfo[name]!!
+            if (!isTeamMate(actor) && (info.killDeathRatio > 2.5f || info.headshotKillRatio > 0.3f)) {
+              val hackerInfo = "${(info.headshotKillRatio*100).d(0)}% ${info.killDeathRatio.d(1)}"
+              layout.setText(nameFont, hackerInfo)
+              val widthHackerInfo = layout.width
+              for(i in -1..1)
+                for(j in -1..1) 
+                  nameFontShadow.draw(spriteBatch, hackerInfo, 
+                                      sx - widthHackerInfo/2 + i, windowHeight - sy + 26 + j)
+              nameBlueFont.draw(spriteBatch, hackerInfo, sx - widthHackerInfo/2, windowHeight - sy + 26)
+            }
           }
-        nameFont.draw(spriteBatch, equippedHead, sx - 14 - widthLeft/2, windowHeight - sy + 1.8f)
-        nameFont.draw(spriteBatch, equippedArmor, sx + 14 - widthRight/2, windowHeight - sy + 1.8f)
-      }
+          
+
+          if (showPlayerGear == 1) {
+            layout.setText(nameFont, equippedHead)
+            val widthLeft = layout.width
+            layout.setText(nameFont, equippedArmor)
+            val widthRight = layout.width
+            for(i in -1..1)
+              for(j in -1..1) {
+                nameFontShadow.draw(spriteBatch, equippedHead, 
+                                    sx - 14 - widthLeft/2 + i, windowHeight - sy + 1.8f + j)
+                nameFontShadow.draw(spriteBatch, equippedArmor, 
+                                    sx + 14 - widthRight/2 + i, windowHeight - sy + 1.8f + j)
+              }
+            nameFont.draw(spriteBatch, equippedHead, sx - 14 - widthLeft/2, windowHeight - sy + 1.8f)
+            nameFont.draw(spriteBatch, equippedArmor, sx + 14 - widthRight/2, windowHeight - sy + 1.8f)
+          }
 
 
-      layout.setText(nameFont, textTop)
-      val widthTop = layout.width
-      layout.setText(nameFont, textBottom)
-      val widthBottom = layout.width
+          layout.setText(nameFont, textTop)
+          val widthTop = layout.width
+          layout.setText(nameFont, textBottom)
+          val widthBottom = layout.width
 
-      for(i in -1..1)
-        for(j in -1..1) {
-          nameFontShadow.draw(spriteBatch, textTop, 
-                              sx - widthTop/2 + i, windowHeight - sy + 15 + j)
-          nameFontShadow.draw(spriteBatch, textBottom, 
-                              sx - widthBottom/2 + i, windowHeight - sy - 12 + j)
+          for(i in -1..1)
+            for(j in -1..1) {
+              nameFontShadow.draw(spriteBatch, textTop, 
+                                  sx - widthTop/2 + i, windowHeight - sy + 15 + j)
+              nameFontShadow.draw(spriteBatch, textBottom, 
+                                  sx - widthBottom/2 + i, windowHeight - sy - 12 + j)
+            }
+          nameFont.draw(spriteBatch, textTop, sx - widthTop/2, windowHeight - sy + 15)
+          nameFont.draw(spriteBatch, textBottom, sx - widthBottom/2, windowHeight - sy - 12)
         }
-      nameFont.draw(spriteBatch, textTop, sx - widthTop/2, windowHeight - sy + 15)
-      nameFont.draw(spriteBatch, textBottom, sx - widthBottom/2, windowHeight - sy - 12)
+      } catch (e: Exception) { 
+        println("drawPlayerInfos error")
+      }
 
     }
   }
@@ -1493,21 +1501,22 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
     if (actor != null && actor.isACharacter) {
       val health = actorHealth[actor.netGUID] ?: 100f
       val groggyHealth = actorGroggyHealth[actor.netGUID] ?: 101f
-      
-      val width = healthBarWidth * zoom
-      val widthBackground = (healthBarWidth + 2000) * zoom
-      val height = healthBarHeight * zoom
-      val heightBackground = (healthBarHeight + 2000) * zoom
-      val positonY = y + playerRadius + heightBackground / 2
-      val healthWidth = (health / 100.0 * width).toFloat()
 
       val playerStateGUID = actorWithPlayerState[actor.netGUID]
-      val numKills = playerNumKills[playerStateGUID] ?: 0
-      val head = playerHead[playerStateGUID] ?: " "
-      val armor = playerArmor[playerStateGUID] ?: " "
+      //val numKills = playerNumKills[playerStateGUID] ?: 0
+      
 
       try {
         // DRAW HEALTHBAR
+        val width = healthBarWidth * zoom
+        val widthBackground = (healthBarWidth + 2000) * zoom
+        val height = healthBarHeight * zoom
+        val heightBackground = (healthBarHeight + 2000) * zoom
+        val positonY = y + playerRadius + heightBackground / 2
+        val healthWidth = (health / 100.0 * width).toFloat()
+        val head = playerHead[playerStateGUID] ?: " "
+        val armor = playerArmor[playerStateGUID] ?: " "
+
         color = BLACK
         rectLine(x - widthBackground / 2 , positonY, x + widthBackground / 2, positonY, heightBackground)
         
@@ -1583,21 +1592,12 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
 
       try {
         // DRAW PLAYER CIRCLE
-        val playerIsGroggying = isGroggying[actor.netGUID] ?: false
-        val playerIsReviving = isReviving[actor.netGUID] ?: false
-        //val currentTime = System.currentTimeMillis()
+        val playerIsGroggying: Boolean = isGroggying[actor.netGUID] ?: false
+        val playerIsReviving: Boolean = isReviving[actor.netGUID] ?: false
 
-        /*
-        val killThreshold = when {
-          currentTime - gameStartTime < 300000 -> 2
-          currentTime - gameStartTime < 600000 -> 4
-          else -> 6
-        }
-        */
-
-        val name = playerNames[playerStateGUID] ?: return
-        //val sleepTime = (actor.netGUID).toString().drop(18).dropLast(1).toLong()
-        query(name, 1000)
+        val name = playerNames[playerStateGUID] ?: "" //return
+        if (name != "")
+          query(name, 1000)
 
         // HACKER CHECK
         var hackerCheck = 0
@@ -1608,11 +1608,14 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
         }
         
         // PLAYER COLOR
-        if (playerIsGroggying == true) {
-          color = if (isTeamMate(actor))
-            CYAN
-          else 
-            Color(0f, 0f, 0f, 0.55f)
+        if (/*playerIsGroggying == true*/ health == 0f) {
+          if (isTeamMate(actor)) {
+            color = BLACK
+            circle(x, y, backgroundRadius, 10)
+            color = CYAN
+          } else { 
+            color = Color(0f, 0f, 0f, 0.5f)
+          }
           circle(x, y, backgroundRadius, 10)
         } else if (playerIsReviving == true) {
           color = BLACK
@@ -1627,13 +1630,6 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
           circle(x, y, backgroundRadius, 10)
           color = Color(1.0f, 0f, 1.0f, 1f)
           circle(x, y, playerRadius, 10)
-        /* KillThreshold method to check aimbot hacker
-        } else if (numKills > killThreshold  && !isTeamMate(actor)) {
-          color = BLACK
-          circle(x, y, backgroundRadius, 10)
-          color = Color(1.0f, 0.1f, 1.0f, 1f)
-          circle(x, y, playerRadius, 10)
-        */
         } else {
           color = BLACK
           circle(x, y, backgroundRadius, 10)
@@ -1653,7 +1649,6 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
         color = pColor
         circle(x, y, playerRadius, 10)
       }
-
     }
 
     // DRAW WINDOW EDGE

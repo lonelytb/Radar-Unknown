@@ -42,3 +42,4 @@ const val NMT_BeaconAssignGUID = 27
 const val NMT_BeaconNetGUIDAck = 28
 
 var encryptionToken = ""
+var replaySpeed: Long = 1

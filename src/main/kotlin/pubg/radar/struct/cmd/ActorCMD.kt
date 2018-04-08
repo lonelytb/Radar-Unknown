@@ -261,11 +261,9 @@ object ActorCMD: GameListener {
         55 -> {
           val SpectatedCount = propertyInt()
         }
-        /*
         56 -> {
           val (id, team) = propertyObject()
         }
-        */
         57 -> {
           val ActualDamage = propertyFloat()
         }
@@ -353,23 +351,21 @@ object ActorCMD: GameListener {
           val b = result
         }
         82 -> {
-          val bIsGroggying=propertyBool()
-          val b = bIsGroggying
-          isGroggying[actor.netGUID] = bIsGroggying
-          //println("ActorCMD 82 bIsGroggying ? $b")
+          val result = propertyBool()
+          val b = result
+          //println("ActorGUID: $isGroggying")
         }
         83 -> {
-          val bIsThirdPerson=propertyBool()
+          isGroggying[actor.netGUID] = propertyBool()
+          //println("83: ${actor.netGUID} $isGroggying")
         }
         84 -> {
-          val bIsReviving=propertyBool()
-          val b=bIsReviving
-          //actorGroggyHealth[actor.netGUID] = GroggyHealth
-          isReviving[actor.netGUID] = bIsReviving
-          
+          isReviving[actor.netGUID] = propertyBool()
+          //println("84: ${actor.netGUID} $bIsThirdPerson")
         }
         85 -> {
-          val bIsWeaponObstructed = propertyBool()
+          val result = propertyBool()
+          //println("85: ${actor.netGUID} $result")
         }
         86 -> {
           val bIsCoatEquipped = propertyBool()

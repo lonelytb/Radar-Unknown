@@ -7,6 +7,7 @@ import org.pcap4j.core.PcapNetworkInterface.PromiscuousMode.PROMISCUOUS
 import org.pcap4j.packet.*
 import pubg.radar.*
 import pubg.radar.deserializer.proc_raw_packet
+import pubg.radar.deserializer.replaySpeed
 import pubg.radar.sniffer.SniffOption.*
 import pubg.radar.util.notify
 import java.io.*
@@ -280,7 +281,7 @@ class Sniffer {
               }
             } catch (e: Exception) {
             }
-            Thread.sleep(1)
+            Thread.sleep(replaySpeed)
           }
         }
       }

@@ -1,5 +1,6 @@
 package pubg.radar
 
+import pubg.radar.deserializer.replaySpeed
 import pubg.radar.sniffer.Sniffer
 import pubg.radar.ui.GLMap
 
@@ -41,6 +42,7 @@ lateinit var Args: Array<String>
 fun main(args: Array<String>) {
   if (args.size > 0 && args[0] == "offline") {
     println("Offline Mode")
+    replaySpeed = args[1].toLong() ?: 1
     Sniffer.sniffLocationOffline()
   }
   else 
