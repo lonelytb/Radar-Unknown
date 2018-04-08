@@ -159,7 +159,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
 
   var filterWeapon = 1
   var filterAttach = -1
-  var filterLvl2 = -1
+  var filterLvl2 = 1
   var filterScope = -1
   var showPlayerGear = 1
   var showCompass = -1
@@ -521,7 +521,8 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
         hudFont.draw(spriteBatch, "$NumAliveTeams", windowWidth - 240f - layout.width /2, windowHeight - 29f)
       } 
 
-      val timeText = "${ElapsedWarningDuration.toInt() - TotalWarningDuration.toInt()}"
+      //val timeText = "${ElapsedWarningDuration.toInt() - TotalWarningDuration.toInt()}"
+      val timeText = "${TotalWarningDuration.toInt() - ElapsedWarningDuration.toInt()}"
       layout.setText(hudFont, timeText)
       
       var offset = 0f
@@ -529,7 +530,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
         offset = 130f
       spriteBatch.draw(hud_panel, windowWidth - 390f + offset, windowHeight - 60f)
       hudFontShadow.draw(spriteBatch, "SECS", windowWidth - 345f + offset, windowHeight - 29f)
-      hudFont.draw(spriteBatch, "${ElapsedWarningDuration.toInt() - TotalWarningDuration.toInt()}", windowWidth - 370f + offset - layout.width /2, windowHeight - 29f)
+      hudFont.draw(spriteBatch, "${TotalWarningDuration.toInt() - ElapsedWarningDuration.toInt()}", windowWidth - 370f + offset - layout.width /2, windowHeight - 29f)
 
 
 
@@ -617,6 +618,9 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       // DRAW SELF
       drawPlayer(GREEN, tuple4(null, selfX, selfY, selfDirection))
       // drawPlayer(GREEN, tuple4(null, selfX, selfY, selfDir.angle()))
+      //println("Head ${playerHead[selfStateID]}")
+      //println("Armor ${playerArmor[selfStateID]}")
+      //println("Back ${playerBack[selfStateID]}")
     }
     
     drawAttackLine(currentTime)
@@ -953,6 +957,12 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
 
         } else if ("bag2" in items || "helmet2" in items || "armor2" in items) {
           if (filterLvl2 == 1) {
+            if ("bag2" in items && (playerBack[selfStateID] == "2" || playerBack[selfStateID] == "3")) 
+              return@forEach
+            else if ("armor2" in items && (playerArmor[selfStateID] == "2" || playerArmor[selfStateID] == "3")) 
+              return@forEach
+            else if ("helmet2" in items && (playerHead[selfStateID] == "2" || playerHead[selfStateID] == "3")) 
+              return@forEach
             color = BLACK
             triangle(x - triBackRadius, y - triBackRadius,
                     x - triBackRadius, y + triBackRadius,
@@ -1141,6 +1151,8 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       val (actor, x, y, _) = it
       actor!!
 
+      if (actor?.netGUID == selfStateID) return
+
       val dir = Vector2(x - selfX, y - selfY)
       val distance = (dir.len() / 1000).toInt() * 10
       val angle = ((dir.angle() + 90) % 360 / 5).toInt() * 5
@@ -1258,7 +1270,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       
       if (completedPlayerInfo.containsKey(name)) { // HACKER CHECK
         val info = completedPlayerInfo[name]!!
-        if (!isTeamMate(actor) && (info.killDeathRatio > 2.5f && info.headshotKillRatio > 0.35f)) {
+        if (!isTeamMate(actor) && (info.killDeathRatio > 2.5f || info.headshotKillRatio > 0.3f)) {
           val hackerInfo = "${(info.headshotKillRatio*100).d(0)}% ${info.killDeathRatio.d(1)}"
           layout.setText(nameFont, hackerInfo)
           val widthHackerInfo = layout.width
@@ -1402,7 +1414,38 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
     val enemyDistance = (Vector2(x, y).sub(selfX, selfY).len() / 1000).toInt() * 10
     val (airx, airy) = Vector2(x, y).mapToWindow()
 
-    //if (actor?.netGUID == selfStateID) return  
+    if (drawSight) {
+      if (playerID == null) {
+        val dirVector = dirUnitVector.cpy().rotate(dir).scl(directionRadius * 10)
+        color = LIME
+        rectLine(x, y,
+                 x + dirVector.x, y + dirVector.y, aimLineWidth * zoom)
+      } else {
+        //color = sightColor
+        color = when {
+          isTeamMate(actor) -> teamSightColor
+          playerID == null -> selfSightColor
+          attach == null -> enemySightColor
+          isTeamMate(actors[attach]) -> teamSightColor
+          else -> enemySightColor
+        }
+        arc(x, y, directionRadius, dir - fov / 2, fov, 10)
+      }
+    }
+
+    // DRAW SELF
+    try {
+      if (playerID == null) {
+        color = BLACK
+        circle(x, y, backgroundRadius, 10)    
+        color = pColor
+        circle(x, y, playerRadius, 10)
+      }
+    } catch (e: Exception) { 
+      println("drawSelf error")
+    } 
+
+    if (actor?.netGUID == selfStateID) return
     
     // DRAW TEAM MARKER
     if (isTeamMate(actor)) {
@@ -1430,7 +1473,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
               number == 6 -> markerColor6
               number == 7 -> markerColor7
               number == 8 -> markerColor8
-              else -> BLACK
+              else -> Color(1.00f, 0.68f, 0.73f, 1f)
             }
             circle(markerX, markerY - markerRadius * 2, markerRadius, 16)
             triangle(markerX - markerRadius, markerY - markerRadius * 2,
@@ -1441,56 +1484,29 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
           }
         }
       } catch (e: Exception) { 
-        //println("drawPlayer error")
+        println("drawMarker error")
       }
     }
 
+    
+    // DRAW PLAYER
+    if (actor != null && actor.isACharacter) {
+      val health = actorHealth[actor.netGUID] ?: 100f
+      val groggyHealth = actorGroggyHealth[actor.netGUID] ?: 101f
+      
+      val width = healthBarWidth * zoom
+      val widthBackground = (healthBarWidth + 2000) * zoom
+      val height = healthBarHeight * zoom
+      val heightBackground = (healthBarHeight + 2000) * zoom
+      val positonY = y + playerRadius + heightBackground / 2
+      val healthWidth = (health / 100.0 * width).toFloat()
 
-    if (drawSight) {
-      if (playerID == null) {
-        val dirVector = dirUnitVector.cpy().rotate(dir).scl(directionRadius * 10)
-        color = LIME
-        rectLine(x, y,
-                 x + dirVector.x, y + dirVector.y, aimLineWidth * zoom)
-      } else {
-        //color = sightColor
-        color = when {
-          isTeamMate(actor) -> teamSightColor
-          playerID == null -> selfSightColor
-          attach == null -> enemySightColor
-          isTeamMate(actors[attach]) -> teamSightColor
-          else -> enemySightColor
-        }
-        arc(x, y, directionRadius, dir - fov / 2, fov, 10)
-      }
-    }
+      val playerStateGUID = actorWithPlayerState[actor.netGUID]
+      val numKills = playerNumKills[playerStateGUID] ?: 0
+      val head = playerHead[playerStateGUID] ?: " "
+      val armor = playerArmor[playerStateGUID] ?: " "
 
-    // DRAW SELF
-    try {
-      if (playerID == null) {
-        color = BLACK
-        circle(x, y, backgroundRadius, 10)    
-        color = pColor
-        circle(x, y, playerRadius, 10)  
-      } 
-
-      // DRAW PLAYER
-      if (actor != null && actor.isACharacter) {
-        val health = actorHealth[actor.netGUID] ?: 100f
-        val groggyHealth = actorGroggyHealth[actor.netGUID] ?: 101f
-        
-        val width = healthBarWidth * zoom
-        val widthBackground = (healthBarWidth + 2000) * zoom
-        val height = healthBarHeight * zoom
-        val heightBackground = (healthBarHeight + 2000) * zoom
-        val positonY = y + playerRadius + heightBackground / 2
-        val healthWidth = (health / 100.0 * width).toFloat()
-
-        val playerStateGUID = actorWithPlayerState[actor.netGUID]
-        val numKills = playerNumKills[playerStateGUID] ?: 0
-        val head = playerHead[playerStateGUID] ?: " "
-        val armor = playerArmor[playerStateGUID] ?: " "
-
+      try {
         // DRAW HEALTHBAR
         color = BLACK
         rectLine(x - widthBackground / 2 , positonY, x + widthBackground / 2, positonY, heightBackground)
@@ -1561,7 +1577,11 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
           }
         }
         rectLine(x - width / 2, positonY, x - width / 2 + healthWidth, positonY, height)
+      } catch (e: Exception) { 
+        println("drawHealthbar error")
+      }
 
+      try {
         // DRAW PLAYER CIRCLE
         val playerIsGroggying = isGroggying[actor.netGUID] ?: false
         val playerIsReviving = isReviving[actor.netGUID] ?: false
@@ -1583,7 +1603,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
         var hackerCheck = 0
         if (completedPlayerInfo.containsKey(name)) { 
           val info = completedPlayerInfo[name]!!
-          if (info.killDeathRatio > 2.5f && info.headshotKillRatio > 0.35f)
+          if (info.killDeathRatio > 2.5f || info.headshotKillRatio > 0.3f)
             hackerCheck = 1
         }
         
@@ -1626,10 +1646,14 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
             }
           circle(x, y, playerRadius, 10)
         }
-
+      } catch (e: Exception) { 
+        println("drawPlayer error")
+        color = BLACK
+        circle(x, y, backgroundRadius, 10)
+        color = pColor
+        circle(x, y, playerRadius, 10)
       }
-    } catch (e: Exception) { 
-      println("drawPlayer error")
+
     }
 
     // DRAW WINDOW EDGE
@@ -1701,18 +1725,29 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
     rectLine(x - dirVector.x, y - dirVector.y,
              x + dirVector.x, y + dirVector.y, width)
     
+    var colorTemp = playerColor
     color = playerColor
     if (actor.attachChildren.isNotEmpty() || v_x * v_x + v_y * v_y > 40) {
       actor.attachChildren.forEach { k, _ ->
         if (k == selfID) {
-          color = selfColor
+          colorTemp = selfColor
           return@forEach
         } else if (isTeamMate(actors[k])) {
-          color = teamColor
+          colorTemp = teamColor
           return@forEach
         }
       }
+      color = colorTemp
       circle(x, y, playerRadius * camera.zoom, 10)
+      val playerNumber = actor.attachChildren?.size
+      if (playerNumber > 1)
+        for (i in 2..playerNumber){
+          color = BLACK
+          circle(x, y - i * 5000 * camera.zoom, (playerRadius / 2 + 1000) * camera.zoom, 8)
+          color = colorTemp
+          circle(x, y - i * 5000 * camera.zoom, playerRadius / 2 * camera.zoom, 8)
+        }
+
 
       // DRAW WINDOW EDGE
       if ((airx < 0 || airx > windowWidth || airy < 0 || airy >windowHeight) && enemyDistance < 700) {
@@ -1757,20 +1792,28 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
     
     val (actor, x, y, dir) = actorInfo
 
-    if (actor!!.attachChildren.isNotEmpty()) {      
+    try {
+      if (actor!!.attachChildren.isNotEmpty()) {      
+        color = BLACK
+        circle(x, y, (playerRadius + 1500f) * camera.zoom, 10)
+        actor.attachChildren.forEach { k, _ ->
+          if (k == selfID) {
+            color = selfColor
+            return@forEach
+          } else if (isTeamMate(actors[k])) {
+            color = teamColor
+            return@forEach
+          } else {
+            color = parachuteColor
+          }
+        }
+        circle(x, y, playerRadius * camera.zoom, 10)
+      }
+    } catch (e: Exception) { 
+      println("drawParachute error")
       color = BLACK
       circle(x, y, (playerRadius + 1500f) * camera.zoom, 10)
-      actor.attachChildren.forEach { k, _ ->
-        if (k == selfID) {
-          color = selfColor
-          return@forEach
-        } else if (isTeamMate(actors[k])) {
-          color = teamColor
-          return@forEach
-        } else {
-          color = parachuteColor
-        }
-      }
+      color = parachuteColor
       circle(x, y, playerRadius * camera.zoom, 10)
     }
 
