@@ -8,6 +8,7 @@ import org.pcap4j.packet.*
 import pubg.radar.*
 import pubg.radar.deserializer.proc_raw_packet
 import pubg.radar.deserializer.replaySpeed
+import pubg.radar.deserializer.pcapFile
 import pubg.radar.sniffer.SniffOption.*
 import pubg.radar.util.notify
 import java.io.*
@@ -252,7 +253,7 @@ class Sniffer {
     
     fun sniffLocationOffline(): Thread {
       return thread(isDaemon = true) {
-        val files = arrayOf("C:\\Misc\\0.pcap")
+        val files = arrayOf("C:\\Misc\\$pcapFile")
         for (file in files) {
           val handle = Pcaps.openOffline(file)
           

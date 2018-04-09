@@ -83,7 +83,7 @@ class PlayerProfile {
             } else {
               completedPlayerInfo[name] = playerInfo
               pendingPlayerInfo.remove(name)
-              println("Pending: ${pendingPlayerInfo.size} Completed: ${completedPlayerInfo.size}")
+              //println("Pending: ${pendingPlayerInfo.size} Completed: ${completedPlayerInfo.size}")
             }
           }
         }

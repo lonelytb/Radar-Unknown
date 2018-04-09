@@ -1271,7 +1271,18 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       
       try {
         val playerIsGroggying: Boolean = isGroggying[actor.netGUID] ?: false
-        if (playerIsGroggying == false) {
+        val playerIsReviving: Boolean = isReviving[actor.netGUID] ?: false
+        if (playerIsReviving == true) {
+          textTop = "Revive"
+          layout.setText(nameFont, textTop)
+          val widthTop = layout.width
+          for(i in -1..1)
+            for(j in -1..1) {
+              nameFontShadow.draw(spriteBatch, textTop, 
+                                  sx - widthTop/2 + i, windowHeight - sy + 15 + j)
+            }
+          nameFont.draw(spriteBatch, textTop, sx - widthTop/2, windowHeight - sy + 15)
+        } else if (playerIsGroggying == false) {
           if (completedPlayerInfo.containsKey(name)) { // HACKER CHECK
             val info = completedPlayerInfo[name]!!
             if (!isTeamMate(actor) && (info.killDeathRatio > 2.5f || info.headshotKillRatio > 0.3f)) {
@@ -1513,7 +1524,11 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
         val height = healthBarHeight * zoom
         val heightBackground = (healthBarHeight + 2000) * zoom
         val positonY = y + playerRadius + heightBackground / 2
-        val healthWidth = (health / 100.0 * width).toFloat()
+        val healthWidth = when { 
+          health > 0f -> (health / 100.0 * width).toFloat()
+          else -> (groggyHealth / 100.0 * width).toFloat()
+        }
+
         val head = playerHead[playerStateGUID] ?: " "
         val armor = playerArmor[playerStateGUID] ?: " "
 
@@ -1527,14 +1542,16 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
               health > 57f -> Color(0.16f, 0.86f, 0.16f, 1f)    // 1 headshot by kar98
               health > 38f -> YELLOW                            // 3 bodyshots
               health > 19f -> ORANGE                            // 2 bodyshots
-              else -> RED                                       // 1 bodyshot
+              health > 0f  -> RED                               // 1 bodyshot
+              else -> GRAY
             }
           } else {
             color = when {
               health > 57f -> Color(0.16f, 0.86f, 0.16f, 1f)    
               health > 38f -> YELLOW                            // 3 bodyshots
               health > 19f -> ORANGE                            // 2 bodyshots
-              else -> RED                                       // 1 bodyshot
+              health > 0f  -> RED                               // 1 bodyshot
+              else -> GRAY
             }
           }
         } else if ("2" in armor) {
@@ -1544,14 +1561,16 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
               health > 78f -> Color(0.16f, 0.86f, 0.16f, 1f)    // 1 headshot
               health > 52f -> YELLOW                            // 3 bodyshots
               health > 26f -> ORANGE                            // 2 bodyshots
-              else -> RED                                       // 1 bodyshot
+              health > 0f  -> RED                               // 1 bodyshot
+              else -> GRAY
             }
           } else {
             color = when {
               health > 78f -> Color(0.16f, 0.86f, 0.16f, 1f)    // 1 headshot
               health > 52f -> YELLOW                            // 3 bodyshots
               health > 26f -> ORANGE                            // 2 bodyshots
-              else -> RED                                       // 1 bodyshot
+              health > 0f  -> RED                               // 1 bodyshot
+              else -> GRAY
             }
           }
         } else if ("1" in armor) {
@@ -1560,14 +1579,16 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
               health > 84f -> Color(0.00f, 0.93f, 0.93f, 1f)    
               health > 60f -> YELLOW                            // 3 bodyshots
               health > 30f -> ORANGE                            // 2 bodyshots
-              else -> RED                                       // 1 bodyshot
+              health > 0f  -> RED                               // 1 bodyshot
+              else -> GRAY
             }
           } else {
             color = when {
               health > 84f -> Color(0.16f, 0.86f, 0.16f, 1f)    
               health > 60f -> YELLOW                            // 3 bodyshots
               health > 30f -> ORANGE                            // 2 bodyshots
-              else -> RED                                       // 1 bodyshot
+              health > 0f  -> RED                               // 1 bodyshot
+              else -> GRAY
             }
           }
         } else if (" " in armor) {
@@ -1575,13 +1596,15 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
             color = when {
               health > 84f -> Color(0.00f, 0.93f, 0.93f, 1f)    
               health > 44f -> ORANGE                            // 2 bodyshots
-              else -> RED                                       // 1 bodyshot
+              health > 0f  -> RED                               // 1 bodyshot
+              else -> GRAY
             }
           } else {
             color = when {
               health > 88f -> Color(0.16f, 0.86f, 0.16f, 1f)    
               health > 44f -> ORANGE                            // 2 bodyshots
-              else -> RED                                       // 1 bodyshot
+              health > 0f  -> RED                               // 1 bodyshot
+              else -> GRAY
             }
           }
         }
@@ -1608,7 +1631,15 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
         }
         
         // PLAYER COLOR
-        if (/*playerIsGroggying == true*/ health == 0f) {
+        if (playerIsReviving == true) {
+          color = BLACK
+          circle(x, y, backgroundRadius, 10)
+          color = if (isTeamMate(actor))
+            CYAN
+          else
+            ORANGE
+          circle(x, y, playerRadius, 10)
+        } else if (/*playerIsGroggying == true*/ health == 0f) {
           if (isTeamMate(actor)) {
             color = BLACK
             circle(x, y, backgroundRadius, 10)
@@ -1617,14 +1648,6 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
             color = Color(0f, 0f, 0f, 0.5f)
           }
           circle(x, y, backgroundRadius, 10)
-        } else if (playerIsReviving == true) {
-          color = BLACK
-          circle(x, y, backgroundRadius, 10)
-          color = if (isTeamMate(actor))
-            CYAN
-          else
-            ORANGE
-          circle(x, y, playerRadius, 10)
         } else if (hackerCheck == 1) {
           color = BLACK
           circle(x, y, backgroundRadius, 10)

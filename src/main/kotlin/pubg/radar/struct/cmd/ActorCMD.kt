@@ -39,6 +39,7 @@ object ActorCMD: GameListener {
     playerStateToActor.clear()
     actorHealth.clear()
     actorGroggyHealth.clear()
+    //reviveCastingTime.clear()
     isGroggying.clear()
     isReviving.clear()
   }
@@ -47,6 +48,7 @@ object ActorCMD: GameListener {
   val playerStateToActor = ConcurrentHashMap<NetworkGUID, NetworkGUID>()
   val actorHealth = ConcurrentHashMap<NetworkGUID, Float>()
   val actorGroggyHealth = ConcurrentHashMap<NetworkGUID, Float>()
+  //val reviveCastingTime = ConcurrentHashMap<NetworkGUID, Float>()
   val isGroggying = ConcurrentHashMap<NetworkGUID, Boolean>()
   val isReviving = ConcurrentHashMap<NetworkGUID, Boolean>()
   
@@ -315,12 +317,14 @@ object ActorCMD: GameListener {
           val a = TargetingType
         }
         73 -> {
-          val reviveCastingTime = propertyFloat()
-          val a = reviveCastingTime
+          val result = propertyFloat()
+          //reviveCastingTime[actor.netGUID] = result
+          //println("73: ${actor.netGUID} $result")
         }
         74 -> {
           val result = propertyBool()
           val b = result
+          //println("74: ${actor.netGUID} $result")
         }
         75 -> {
           val result = propertyBool()
@@ -352,12 +356,12 @@ object ActorCMD: GameListener {
         }
         82 -> {
           val result = propertyBool()
-          val b = result
-          //println("ActorGUID: $isGroggying")
+          //println("82: ${actor.netGUID} $result")
         }
         83 -> {
-          isGroggying[actor.netGUID] = propertyBool()
-          //println("83: ${actor.netGUID} $isGroggying")
+          val result = propertyBool()
+          isGroggying[actor.netGUID] = result
+          //println("83: ${actor.netGUID} $result")
         }
         84 -> {
           isReviving[actor.netGUID] = propertyBool()

@@ -43,3 +43,4 @@ const val NMT_BeaconNetGUIDAck = 28
 
 var encryptionToken = ""
 var replaySpeed: Long = 1
+var pcapFile = "0"
