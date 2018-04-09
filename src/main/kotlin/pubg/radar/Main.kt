@@ -42,8 +42,7 @@ fun gameOver() {
 lateinit var Args: Array<String>
 fun main(args: Array<String>) {
   if (args.size > 0) {
-    println("Offline Mode")
-    pcapFile = args[0].toString() + ".pcap" ?: "0.pcap"
+    pcapFile = args[0].toString() ?: "0"
     if (args.size > 1)
       replaySpeed = args[1].toLong() ?: 1
     Sniffer.sniffLocationOffline()

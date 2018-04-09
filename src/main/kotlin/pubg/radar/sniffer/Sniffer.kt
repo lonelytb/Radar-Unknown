@@ -246,6 +246,7 @@ class Sniffer {
             else if (udp.header.srcPort.valueAsInt() in 7000..7999)
               proc_raw_packet(raw)
           } catch (e: Exception) {
+            //println("Sniffer error")
           }
         }
       }
@@ -253,7 +254,8 @@ class Sniffer {
     
     fun sniffLocationOffline(): Thread {
       return thread(isDaemon = true) {
-        val files = arrayOf("C:\\Misc\\$pcapFile")
+        val files = arrayOf("C:\\Misc\\$pcapFile.pcap")
+        println("Offline Mode")
         for (file in files) {
           val handle = Pcaps.openOffline(file)
           
@@ -281,6 +283,7 @@ class Sniffer {
                 proc_raw_packet(raw)
               }
             } catch (e: Exception) {
+              //println("Sniffer Offline error")
             }
             Thread.sleep(replaySpeed)
           }

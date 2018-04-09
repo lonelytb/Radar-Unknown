@@ -141,6 +141,7 @@ class PlayerProfile {
           }
           
         } catch (e: Exception) {
+          println("RetrievePlayerInfo Error")
         }
       }
       return PlayerInfo(0f, 0f)

@@ -39,6 +39,7 @@ object ActorCMD: GameListener {
     playerStateToActor.clear()
     actorHealth.clear()
     actorGroggyHealth.clear()
+    spectatedCount.clear()
     //reviveCastingTime.clear()
     isGroggying.clear()
     isReviving.clear()
@@ -48,6 +49,8 @@ object ActorCMD: GameListener {
   val playerStateToActor = ConcurrentHashMap<NetworkGUID, NetworkGUID>()
   val actorHealth = ConcurrentHashMap<NetworkGUID, Float>()
   val actorGroggyHealth = ConcurrentHashMap<NetworkGUID, Float>()
+  val spectatedCount = ConcurrentHashMap<NetworkGUID, Int>()
+
   //val reviveCastingTime = ConcurrentHashMap<NetworkGUID, Float>()
   val isGroggying = ConcurrentHashMap<NetworkGUID, Boolean>()
   val isReviving = ConcurrentHashMap<NetworkGUID, Boolean>()
@@ -261,7 +264,8 @@ object ActorCMD: GameListener {
           val bIsInVehicleRemote = propertyBool()
         }
         55 -> {
-          val SpectatedCount = propertyInt()
+          val result = propertyInt()
+          spectatedCount[actor.netGUID] = result
         }
         56 -> {
           val (id, team) = propertyObject()

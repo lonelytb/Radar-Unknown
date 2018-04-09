@@ -40,6 +40,7 @@ import pubg.radar.struct.cmd.ActorCMD.actorWithPlayerState
 import pubg.radar.struct.cmd.ActorCMD.isGroggying
 import pubg.radar.struct.cmd.ActorCMD.isReviving
 import pubg.radar.struct.cmd.ActorCMD.playerStateToActor
+import pubg.radar.struct.cmd.ActorCMD.spectatedCount
 import pubg.radar.struct.cmd.GameStateCMD.ElapsedWarningDuration
 import pubg.radar.struct.cmd.GameStateCMD.MatchElapsedMinutes
 import pubg.radar.struct.cmd.GameStateCMD.NumAlivePlayers
@@ -52,6 +53,10 @@ import pubg.radar.struct.cmd.GameStateCMD.SafetyZonePosition
 import pubg.radar.struct.cmd.GameStateCMD.SafetyZoneRadius
 import pubg.radar.struct.cmd.GameStateCMD.TotalWarningDuration
 import pubg.radar.struct.cmd.PlayerStateCMD.attacks
+import pubg.radar.struct.cmd.PlayerStateCMD.countMedKit
+import pubg.radar.struct.cmd.PlayerStateCMD.countFirstAid
+import pubg.radar.struct.cmd.PlayerStateCMD.countPainKiller
+import pubg.radar.struct.cmd.PlayerStateCMD.countEnergyDrink
 import pubg.radar.struct.cmd.PlayerStateCMD.playerArmor
 import pubg.radar.struct.cmd.PlayerStateCMD.playerHead
 import pubg.radar.struct.cmd.PlayerStateCMD.playerBack
@@ -161,8 +166,10 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
   var filterAttach = -1
   var filterLvl2 = 1
   var filterScope = -1
-  var showPlayerGear = 1
   var showCompass = -1
+  var showPlayerName = -1
+  var showPlayerGear = 1
+  var showPlayerMed = -1
   var zoomSwitch = 1
 
   var dragging = false
@@ -331,7 +338,15 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       return true
 
     } else if (keycode == NUM_0) {
+      showPlayerName = showPlayerName * -1
+      return true
+      
+    } else if (keycode == MINUS) {
       showPlayerGear = showPlayerGear * -1
+      return true
+
+    } else if (keycode == EQUALS) {
+      showPlayerMed = showPlayerMed * -1
       return true
 
     } else if (keycode == DPAD_LEFT) {
@@ -415,11 +430,13 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
     param.characters = DEFAULT_CHARS
     param.size = 16
     param.color = WHITE
+    param.borderColor = Color.BLACK
+    param.borderWidth = 1.2f
     littleFont = generator.generateFont(param)
     param.color = Color(0f, 0f, 0f, 0.5f) 
     littleFontShadow = generator.generateFont(param)
     param.size = 10
-    param.color = Color(0.9f, 0.9f, 0.9f, 1f) 
+    param.color = Color(0.9f, 0.9f, 0.9f, 1f)
     nameFont = generator.generateFont(param)
     param.color = Color(0.3f, 0.9f, 1f, 1f) 
     nameBlueFont = generator.generateFont(param)
@@ -557,6 +574,19 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       else
         espFontShadow.draw(spriteBatch, "SCOPE", 92f, windowHeight - 42f)
 
+      val playerStatsNumber = completedPlayerInfo.size ?: 0
+      if (pendingPlayerInfo.size == 0) 
+        espFont.draw(spriteBatch, "$playerStatsNumber", 140f, windowHeight - 25f)
+      else
+        espFontShadow.draw(spriteBatch, "$playerStatsNumber", 140f, windowHeight - 25f)
+
+      val selfSpectatedCount = spectatedCount[selfStateID] ?: 0
+      if (selfSpectatedCount > 0) 
+        espFont.draw(spriteBatch, "$selfSpectatedCount", 140f, windowHeight - 42f)
+      else
+        espFontShadow.draw(spriteBatch, "0", 140f, windowHeight - 42f)
+
+
       // COMPASS BACKGROUND
       if (showCompass == 1)
         spriteBatch.draw(bg_compass, windowWidth/2 - 165f, windowHeight/2 - 165f)      
@@ -569,11 +599,6 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       val pinDistance = (pinLocation.cpy().sub(selfX, selfY).len() / 100).toInt()
       val (x, y) = pinLocation.mapToWindow()
 
-      for(i in -1..1) {
-          for(j in -1..1) {
-            littleFontShadow.draw(spriteBatch, "$pinDistance", x + i, windowHeight - y + j)
-          }
-      }
       littleFont.draw(spriteBatch, "$pinDistance", x, windowHeight - y)
       */
 
@@ -1150,13 +1175,29 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
     players?.forEach {
       val (actor, x, y, _) = it
       actor!!
+      val (sx, sy) = mapToWindow(x, y)
 
-      if (actor?.netGUID == selfStateID) return
+      if (actor?.netGUID == selfStateID) {
+        /*
+        try {
+          if (spectatedCount[actor.netGUID] == 0) {
+            var textSelfTop = "${spectatedCount[actor.netGUID]}"
+            layout.setText(nameFont, textSelfTop)
+            val widthSelfTop = layout.width
+            nameFont.draw(spriteBatch, textSelfTop, sx - widthSelfTop/2, windowHeight - sy + 15)
+            }
+          }
+        } catch (e: Exception) { 
+          println("drawSelfInfos error")
+        }
+        */
+        return
+      }
 
       val dir = Vector2(x - selfX, y - selfY)
       val distance = (dir.len() / 1000).toInt() * 10
       val angle = ((dir.angle() + 90) % 360 / 5).toInt() * 5
-      val (sx, sy) = mapToWindow(x, y)
+      
       
       
       val playerStateGUID = actorWithPlayerState[actor.netGUID] ?: return@forEach
@@ -1210,64 +1251,53 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       }
 
       val weaponAbbr2 = when {
-        "HK416" in weapon[1] -> " M4"
-        "SCAR-L" in weapon[1] -> " SCR"
-        "M16A4" in weapon[1] -> " M16"
-        "AK47" in weapon[1] -> " AK"
-        "DP28" in weapon[1] -> " DP"
-        "AUG" in weapon[1] -> " AUG"
-        "M249" in weapon[1] -> " M249"
-        "Groza" in weapon[1] -> " GRZ"
-        "AWM" in weapon[1] -> " AWM"
-        "M24" in weapon[1] -> " M24"
-        "MK14" in weapon[1] -> " MK14"
-        "Kar98" in weapon[1] -> " K98"
-        "SKS" in weapon[1] -> " SKS"
-        "Mini" in weapon[1] -> " Mini"
-        "Win94" in weapon[1] -> " Win"
-        "UMP" in weapon[1] -> " UMP"
-        "UZI" in weapon[1] -> " Uzi"
-        "Vector" in weapon[1] -> " Vec"
-        "Thompson" in weapon[1] -> " Tom"
-        "Saiga12" in weapon[1] -> " S12K"
-        "Berreta686" in weapon[1] -> " 686"
-        "Winchester" in weapon[1] -> " 1897"
-        "Crossbow" in weapon[1] -> " Xbow"
+        "HK416" in weapon[1] -> "  M4"
+        "SCAR-L" in weapon[1] -> "  SCR"
+        "M16A4" in weapon[1] -> "  M16"
+        "AK47" in weapon[1] -> "  AK"
+        "DP28" in weapon[1] -> "  DP"
+        "AUG" in weapon[1] -> "  AUG"
+        "M249" in weapon[1] -> "  M249"
+        "Groza" in weapon[1] -> "  GRZ"
+        "AWM" in weapon[1] -> "  AWM"
+        "M24" in weapon[1] -> "  M24"
+        "MK14" in weapon[1] -> "  MK14"
+        "Kar98" in weapon[1] -> "  K98"
+        "SKS" in weapon[1] -> "  SKS"
+        "Mini" in weapon[1] -> "  Mini"
+        "Win94" in weapon[1] -> "  Win"
+        "UMP" in weapon[1] -> "  UMP"
+        "UZI" in weapon[1] -> "  Uzi"
+        "Vector" in weapon[1] -> "  Vec"
+        "Thompson" in weapon[1] -> "  Tom"
+        "Saiga12" in weapon[1] -> "  S12K"
+        "Berreta686" in weapon[1] -> "  686"
+        "Winchester" in weapon[1] -> "  1897"
+        "Crossbow" in weapon[1] -> "  Xbow"
         "G18" in weapon[1] || "M1911" in weapon[1] || "M9" in weapon[1] ||
         "Nagant" in weapon[1] || "Rhino" in weapon[1] || "Sawnoff" in weapon[1] -> ""
         "Crowbar" in weapon[1] || "Machete" in weapon[1] || "Sickle" in weapon[1] -> ""
         weapon[1] in "" -> ""
-        else -> " ${weapon[1]}"
+        else -> "  ${weapon[1]}"
       }
 
 
       val weaponAbbr = weaponAbbr1 + weaponAbbr2
 
-      val equippedHead = playerHead[playerStateGUID] ?: " "
-      val equippedArmor = playerArmor[playerStateGUID] ?: " "
+      
 
-      // Disabled show items
-      /*
-      var items=""
-      for (element in PlayerState.equipableItems) {
-          if (element == null || element._1.isBlank()) continue
-          items+="${element._1}->${element._2.toInt()}\n"
+      var textTop = when {
+        isTeamMate(actor) -> "$weaponAbbr  "
+        NumAliveTeams == NumAlivePlayers -> "$weaponAbbr  "
+        else -> "$teamNumber$weaponAbbr"
       }
-      for (element in PlayerState.castableItems) {
-          if (element == null || element._1.isBlank()) continue
-          items+="${element._1}->${element._2}\n"
+        
+      var textBottom = when {
+        isTeamMate(actor) -> "$name"
+        showPlayerName == 1 -> "$name"
+        else -> "$angle°$distance"
       }
-      */
-
-      var textTop = "$teamNumber$weaponAbbr"
-      if (NumAliveTeams == NumAlivePlayers) 
-        textTop = "$weaponAbbr  "
-      var textBottom = "$angle°$distance"
       //var textBottom = "${actor.netGUID}"
-      if (isTeamMate(actor)) {
-        textTop = "$weaponAbbr  "
-        textBottom = "$name"
-      }
       
       try {
         val playerIsGroggying: Boolean = isGroggying[actor.netGUID] ?: false
@@ -1276,11 +1306,6 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
           textTop = "Revive"
           layout.setText(nameFont, textTop)
           val widthTop = layout.width
-          for(i in -1..1)
-            for(j in -1..1) {
-              nameFontShadow.draw(spriteBatch, textTop, 
-                                  sx - widthTop/2 + i, windowHeight - sy + 15 + j)
-            }
           nameFont.draw(spriteBatch, textTop, sx - widthTop/2, windowHeight - sy + 15)
         } else if (playerIsGroggying == false) {
           if (completedPlayerInfo.containsKey(name)) { // HACKER CHECK
@@ -1289,44 +1314,40 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
               val hackerInfo = "${(info.headshotKillRatio*100).d(0)}% ${info.killDeathRatio.d(1)}"
               layout.setText(nameFont, hackerInfo)
               val widthHackerInfo = layout.width
-              for(i in -1..1)
-                for(j in -1..1) 
-                  nameFontShadow.draw(spriteBatch, hackerInfo, 
-                                      sx - widthHackerInfo/2 + i, windowHeight - sy + 26 + j)
               nameBlueFont.draw(spriteBatch, hackerInfo, sx - widthHackerInfo/2, windowHeight - sy + 26)
             }
           }
-          
 
           if (showPlayerGear == 1) {
+            val equippedHead = playerHead[playerStateGUID] ?: " "
+            val equippedArmor = playerArmor[playerStateGUID] ?: " "
             layout.setText(nameFont, equippedHead)
             val widthLeft = layout.width
             layout.setText(nameFont, equippedArmor)
             val widthRight = layout.width
-            for(i in -1..1)
-              for(j in -1..1) {
-                nameFontShadow.draw(spriteBatch, equippedHead, 
-                                    sx - 14 - widthLeft/2 + i, windowHeight - sy + 1.8f + j)
-                nameFontShadow.draw(spriteBatch, equippedArmor, 
-                                    sx + 14 - widthRight/2 + i, windowHeight - sy + 1.8f + j)
-              }
             nameFont.draw(spriteBatch, equippedHead, sx - 14 - widthLeft/2, windowHeight - sy + 1.8f)
             nameFont.draw(spriteBatch, equippedArmor, sx + 14 - widthRight/2, windowHeight - sy + 1.8f)
           }
 
+          if (showPlayerMed == 1) {
+            val countMedKit = countMedKit[playerStateGUID] ?: 0
+            val countFirstAid = countFirstAid[playerStateGUID] ?: 0
+            val countPainKiller = countPainKiller[playerStateGUID] ?: 0
+            val countEnergyDrink = countEnergyDrink[playerStateGUID] ?: 0
+            val playerHeal = countMedKit + countFirstAid
+            val playerBoost = countPainKiller + countEnergyDrink
+            layout.setText(nameFont, playerHeal.toString())
+            val widthLeft = layout.width
+            layout.setText(nameFont, playerBoost.toString())
+            val widthRight = layout.width
+            nameBlueFont.draw(spriteBatch, playerHeal.toString(), sx - 22 - widthLeft/2, windowHeight - sy + 1.8f)
+            nameBlueFont.draw(spriteBatch, playerBoost.toString(), sx + 22 - widthRight/2, windowHeight - sy + 1.8f)
+          }
 
           layout.setText(nameFont, textTop)
           val widthTop = layout.width
           layout.setText(nameFont, textBottom)
           val widthBottom = layout.width
-
-          for(i in -1..1)
-            for(j in -1..1) {
-              nameFontShadow.draw(spriteBatch, textTop, 
-                                  sx - widthTop/2 + i, windowHeight - sy + 15 + j)
-              nameFontShadow.draw(spriteBatch, textBottom, 
-                                  sx - widthBottom/2 + i, windowHeight - sy - 12 + j)
-            }
           nameFont.draw(spriteBatch, textTop, sx - widthTop/2, windowHeight - sy + 15)
           nameFont.draw(spriteBatch, textBottom, sx - widthBottom/2, windowHeight - sy - 12)
         }
@@ -1346,9 +1367,6 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       if (road > 0) {
         val runningTime = (road / runSpeed).toInt()
         val (x, y) = dir.nor().scl(road).add(selfCoords).mapToWindow()
-        for(i in -1..1)
-          for(j in -1..1)
-            littleFontShadow.draw(spriteBatch, "$runningTime", x + i, windowHeight - y + j)
         littleFont.draw(spriteBatch, "$runningTime", x, windowHeight - y)
         /*
         val remainingTime = (TotalWarningDuration - ElapsedWarningDuration).toInt()
