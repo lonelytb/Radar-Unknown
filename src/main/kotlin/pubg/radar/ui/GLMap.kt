@@ -430,8 +430,8 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
     param.characters = DEFAULT_CHARS
     param.size = 16
     param.color = WHITE
-    param.borderColor = Color.BLACK
-    param.borderWidth = 1.2f
+    //param.borderColor = Color.BLACK
+    //param.borderWidth = 1.2f
     littleFont = generator.generateFont(param)
     param.color = Color(0f, 0f, 0f, 0.5f) 
     littleFontShadow = generator.generateFont(param)
@@ -574,7 +574,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       else
         espFontShadow.draw(spriteBatch, "SCOPE", 92f, windowHeight - 42f)
 
-      val playerStatsNumber = completedPlayerInfo.size ?: 0
+      val playerStatsNumber = completedPlayerInfo.size
       if (pendingPlayerInfo.size == 0) 
         espFont.draw(spriteBatch, "$playerStatsNumber", 140f, windowHeight - 25f)
       else
@@ -1177,20 +1177,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       actor!!
       val (sx, sy) = mapToWindow(x, y)
 
-      if (actor?.netGUID == selfStateID) {
-        /*
-        try {
-          if (spectatedCount[actor.netGUID] == 0) {
-            var textSelfTop = "${spectatedCount[actor.netGUID]}"
-            layout.setText(nameFont, textSelfTop)
-            val widthSelfTop = layout.width
-            nameFont.draw(spriteBatch, textSelfTop, sx - widthSelfTop/2, windowHeight - sy + 15)
-            }
-          }
-        } catch (e: Exception) { 
-          println("drawSelfInfos error")
-        }
-        */
+      if (actor.netGUID == selfStateID) {
         return
       }
 
@@ -1306,6 +1293,9 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
           textTop = "Revive"
           layout.setText(nameFont, textTop)
           val widthTop = layout.width
+          for(i in -1..1)
+            for(j in -1..1) 
+              nameFontShadow.draw(spriteBatch, textTop, sx - widthTop/2 + i, windowHeight - sy + 15 + j)
           nameFont.draw(spriteBatch, textTop, sx - widthTop/2, windowHeight - sy + 15)
         } else if (playerIsGroggying == false) {
           if (completedPlayerInfo.containsKey(name)) { // HACKER CHECK
@@ -1314,6 +1304,10 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
               val hackerInfo = "${(info.headshotKillRatio*100).d(0)}% ${info.killDeathRatio.d(1)}"
               layout.setText(nameFont, hackerInfo)
               val widthHackerInfo = layout.width
+              for(i in -1..1)
+                for(j in -1..1) 
+                  nameFontShadow.draw(spriteBatch, hackerInfo, 
+                                      sx - widthHackerInfo/2 + i, windowHeight - sy + 26 + j)
               nameBlueFont.draw(spriteBatch, hackerInfo, sx - widthHackerInfo/2, windowHeight - sy + 26)
             }
           }
@@ -1325,6 +1319,13 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
             val widthLeft = layout.width
             layout.setText(nameFont, equippedArmor)
             val widthRight = layout.width
+            for(i in -1..1)
+              for(j in -1..1) {
+                nameFontShadow.draw(spriteBatch, equippedHead, 
+                                    sx - 14 - widthLeft/2 + i, windowHeight - sy + 1.8f + j)
+                nameFontShadow.draw(spriteBatch, equippedArmor, 
+                                    sx + 14 - widthRight/2 + i, windowHeight - sy + 1.8f + j)
+              }
             nameFont.draw(spriteBatch, equippedHead, sx - 14 - widthLeft/2, windowHeight - sy + 1.8f)
             nameFont.draw(spriteBatch, equippedArmor, sx + 14 - widthRight/2, windowHeight - sy + 1.8f)
           }
@@ -1340,6 +1341,13 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
             val widthLeft = layout.width
             layout.setText(nameFont, playerBoost.toString())
             val widthRight = layout.width
+            for(i in -1..1)
+              for(j in -1..1) {
+                nameFontShadow.draw(spriteBatch, playerHeal.toString(), 
+                                    sx - 22 - widthLeft/2 + i, windowHeight - sy + 1.8f + j)
+                nameFontShadow.draw(spriteBatch, playerBoost.toString(), 
+                                    sx + 22 - widthRight/2 + i, windowHeight - sy + 1.8f + j)
+              }
             nameBlueFont.draw(spriteBatch, playerHeal.toString(), sx - 22 - widthLeft/2, windowHeight - sy + 1.8f)
             nameBlueFont.draw(spriteBatch, playerBoost.toString(), sx + 22 - widthRight/2, windowHeight - sy + 1.8f)
           }
@@ -1348,6 +1356,13 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
           val widthTop = layout.width
           layout.setText(nameFont, textBottom)
           val widthBottom = layout.width
+          for(i in -1..1)
+            for(j in -1..1) {
+              nameFontShadow.draw(spriteBatch, textTop, 
+                                  sx - widthTop/2 + i, windowHeight - sy + 15 + j)
+              nameFontShadow.draw(spriteBatch, textBottom, 
+                                  sx - widthBottom/2 + i, windowHeight - sy - 12 + j)
+            }
           nameFont.draw(spriteBatch, textTop, sx - widthTop/2, windowHeight - sy + 15)
           nameFont.draw(spriteBatch, textBottom, sx - widthBottom/2, windowHeight - sy - 12)
         }
@@ -1443,7 +1458,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
     val attach = actor?.attachChildren?.values?.firstOrNull()
 
     val playerID = when {
-      actor != null -> actorWithPlayerState[actor!!.netGUID]
+      actor != null -> actorWithPlayerState[actor.netGUID]
       else -> null
     }
 
@@ -1461,7 +1476,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
         //color = sightColor
         color = when {
           isTeamMate(actor) -> teamSightColor
-          playerID == null -> selfSightColor
+          //playerID == null -> selfSightColor
           attach == null -> enemySightColor
           isTeamMate(actors[attach]) -> teamSightColor
           else -> enemySightColor

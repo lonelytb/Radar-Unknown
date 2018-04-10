@@ -84,7 +84,6 @@ object GameStateCMD: GameListener {
           val ElapsedTime = propertyInt()
           val b = ElapsedTime
           //println("21 $b")
-
         }
         22 -> {
           val MatchId = propertyString()
@@ -120,10 +119,9 @@ object GameStateCMD: GameListener {
         32 -> {
           val bCanShowLastCircleMark = propertyBool()
         }
-        32 -> {
+        33 -> {
           val bCanKillerSpectate = propertyBool()
         }
-
         34 -> {
           NumJoinPlayers = propertyInt()
         }
