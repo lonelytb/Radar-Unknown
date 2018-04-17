@@ -218,10 +218,12 @@ object ActorCMD: GameListener {
           val flags = readUInt8()
         }
         42 -> {
-          val result = propertyVector10()
+          val Acceleration = propertyVector10()
+          val b = Acceleration
         }
         43 -> {
-          val result = propertyVector10()
+          val LinearVelocity = propertyVector10()
+          val b = LinearVelocity
         }
       //AMutableCharacter
         44 -> {
@@ -237,16 +239,20 @@ object ActorCMD: GameListener {
           val remote_CastAnim = readInt(8)
         }
         46 -> {
-          val result = propertyInt()
+          val CurrentWeaponZoomLevel = propertyByte()
+          val b = CurrentWeaponZoomLevel
         }
         47 -> {
-          val result = propertyFloat()
+          val BuffFinalSpreadFactor = propertyFloat()
+          val b = BuffFinalSpreadFactor
         }
         48 -> {
-          val result = propertyObject()
+          val InventoryFacade = propertyObject()
+          val b = InventoryFacade
         }
         49 -> {
-          val result = propertyObject()
+          val WeaponProcessor = propertyObject()
+          val b = WeaponProcessor
         }
         50 -> {
           val CharacterState = propertyByte()
@@ -361,10 +367,10 @@ object ActorCMD: GameListener {
         82 -> {
           val result = propertyBool()
           //println("82: ${actor.netGUID} $result")
+          isGroggying[actor.netGUID] = result
         }
         83 -> {
           val result = propertyBool()
-          isGroggying[actor.netGUID] = result
           //println("83: ${actor.netGUID} $result")
         }
         84 -> {

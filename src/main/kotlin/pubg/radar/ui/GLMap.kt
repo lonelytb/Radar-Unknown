@@ -42,7 +42,10 @@ import pubg.radar.struct.cmd.ActorCMD.isReviving
 import pubg.radar.struct.cmd.ActorCMD.playerStateToActor
 import pubg.radar.struct.cmd.ActorCMD.spectatedCount
 import pubg.radar.struct.cmd.GameStateCMD.ElapsedWarningDuration
+import pubg.radar.struct.cmd.GameStateCMD.isTeamMatch
+import pubg.radar.struct.cmd.GameStateCMD.isWarMode
 import pubg.radar.struct.cmd.GameStateCMD.MatchElapsedMinutes
+import pubg.radar.struct.cmd.GameStateCMD.MatchStartType
 import pubg.radar.struct.cmd.GameStateCMD.NumAlivePlayers
 import pubg.radar.struct.cmd.GameStateCMD.NumAliveTeams
 import pubg.radar.struct.cmd.GameStateCMD.PoisonGasWarningPosition
@@ -639,7 +642,8 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       drawItem()
       //drawAirdropWeapon()
       drawAPawn(typeLocation, selfX, selfY, zoom, currentTime)
-      drawCorpse()
+      if (MatchStartType != "241")
+        drawCorpse()
       // DRAW SELF
       drawPlayer(GREEN, tuple4(null, selfX, selfY, selfDirection))
       // drawPlayer(GREEN, tuple4(null, selfX, selfY, selfDir.angle()))
@@ -1262,8 +1266,8 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
         "Winchester" in weapon[1] -> "  1897"
         "Crossbow" in weapon[1] -> "  Xbow"
         "G18" in weapon[1] || "M1911" in weapon[1] || "M9" in weapon[1] ||
-        "Nagant" in weapon[1] || "Rhino" in weapon[1] || "Sawnoff" in weapon[1] -> ""
-        "Crowbar" in weapon[1] || "Machete" in weapon[1] || "Sickle" in weapon[1] -> ""
+        "Nagant" in weapon[1] || "Rhino" in weapon[1] || "Sawnoff" in weapon[1] -> "  Pis"
+        "Crowbar" in weapon[1] || "Machete" in weapon[1] || "Sickle" in weapon[1] -> " Melee"
         weapon[1] in "" -> ""
         else -> "  ${weapon[1]}"
       }
@@ -1274,12 +1278,14 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       
 
       var textTop = when {
+        MatchStartType == "241" /*NumAliveTeams == 3 && NumAlivePlayers > 12*/ -> if (isTeamMate(actor)) "" else "$teamNumber" // War Mode
         isTeamMate(actor) -> "$weaponAbbr  "
         NumAliveTeams == NumAlivePlayers -> "$weaponAbbr  "
         else -> "$teamNumber$weaponAbbr"
       }
         
       var textBottom = when {
+        MatchStartType == "241" /*NumAliveTeams == 3 && NumAlivePlayers > 12*/ -> if (isTeamMate(actor)) "" else "$angle°$distance"
         isTeamMate(actor) -> "$name"
         showPlayerName == 1 -> "$name"
         else -> "$angle°$distance"
@@ -1677,10 +1683,11 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
             color = BLACK
             circle(x, y, backgroundRadius, 10)
             color = CYAN
+            circle(x, y, playerRadius, 10)
           } else { 
             color = Color(0f, 0f, 0f, 0.5f)
+            circle(x, y, backgroundRadius, 10)
           }
-          circle(x, y, backgroundRadius, 10)
         } else if (hackerCheck == 1) {
           color = BLACK
           circle(x, y, backgroundRadius, 10)

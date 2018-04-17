@@ -151,32 +151,39 @@ object PlayerStateCMD: GameListener {
             val element = castableItems[arrayIdx] ?: tuple2("", 0)
             when (structIdx)
             {
-              0 ->
-              {
+              0 -> {
                 val (guid, castableItemClass) = readObject()
                 if (castableItemClass != null)
                   element._1 = simplify(castableItemClass.pathName)
+                  //println(element._1)
               }
-              1 ->
-              {
+              1 -> {
                 val ItemType = readInt(8)
                 val a = ItemType
               }
-              2 ->
-              {
+              2 -> {
                 val itemCount = readInt32()
                 element._2 = itemCount
-                if ("MedKit" in element._1)
-                  countMedKit[actor.netGUID] = element._2
-                else if ("FirstAid" in element._1)
-                  countFirstAid[actor.netGUID] = element._2
-                else if ("PainKiller" in element._1)
-                  countPainKiller[actor.netGUID] = element._2
-                else if ("EnergyDrink" in element._1)
-                  countEnergyDrink[actor.netGUID] = element._2
               }
             }
             castableItems[arrayIdx] = element
+            if ("MedKit" in element._1) {
+              countMedKit[actor.netGUID] = element._2
+              //println("${actor.netGUID} ${countMedKit[actor.netGUID]}")
+              //println(element)
+            } else if ("FirstAid" in element._1) {
+              countFirstAid[actor.netGUID] = element._2
+              //println("${actor.netGUID} ${countFirstAid[actor.netGUID]}")
+              //println(element)
+            } else if ("PainKiller" in element._1) {
+              countPainKiller[actor.netGUID] = element._2
+              //println("${actor.netGUID} ${countPainKiller[actor.netGUID]}")
+              //println(element)
+            } else if ("EnergyDrink" in element._1) {
+              countEnergyDrink[actor.netGUID] = element._2
+              //println("${actor.netGUID} ${countEnergyDrink[actor.netGUID]}")
+              //println(element)
+            }
             index = readIntPacked()
           }
           return true

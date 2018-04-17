@@ -1,6 +1,7 @@
 package pubg.radar.http
 
 import pubg.radar.*
+import pubg.radar.struct.cmd.GameStateCMD.isTeamMatch
 import pubg.radar.struct.cmd.GameStateCMD.NumAlivePlayers
 import pubg.radar.struct.cmd.GameStateCMD.NumAliveTeams
 import java.util.concurrent.ConcurrentHashMap
@@ -106,9 +107,9 @@ class PlayerProfile {
           var strList:List<String> = elements.split("\"")
           val userID = strList[5]
 
-          var queue_size = (if (NumAliveTeams == NumAlivePlayers) "1" else "4")
-
+          var queue_size = (if (isTeamMatch) "4" else "1")
           var elementsInfo = ""
+          
           try {
             val urlASInfo = URL("https://pubg.op.gg/api/users/$userID/ranked-stats?season=2018-04&server=as&queue_size=$queue_size&mode=tpp")
             elementsInfo = urlASInfo.readText()
