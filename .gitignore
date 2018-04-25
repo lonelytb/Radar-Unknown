@@ -1,4 +1,5 @@
 target/
+src/main/kotlin/pubg/radar/Main.kt
 src/main/kotlin/pubg/radar/deserializer/Buffer.kt
 src/main/kotlin/pubg/radar/deserializer/PacketParser.kt
 src/main/kotlin/pubg/radar/deserializer/channel/ControlChannel.kt
