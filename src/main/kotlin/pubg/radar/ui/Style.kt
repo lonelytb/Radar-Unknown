@@ -84,7 +84,7 @@ val rareRifleColor = Color(0.54f, 0.27f, 0.14f, 1f)  //sienna4
 val rareRifle556Color = Color(0.54f, 0.27f, 0.14f, 1f)  //sienna4
 val rareRifle762Color = Color(0.86f, 0.43f, 0.24f, 1f)  //sienna2
 val rareAirdropWeaponColor = Color(1.0f, 0.19f, 0.19f, 1f)	//firebrick
-val rareFlareColor = Color(1.0f, 0.01f, 1.0f, 1f)	//firebrick
+val rareFlareColor = Color(1.0f, 0.01f, 1.0f, 1f)  //magenta
 
 val rareARAttachColor = Color(0.80f, 0.73f, 0.59f, 1f)  //wheat3
 val rareSRAttachColor = Color(1.00f, 0.68f, 0.73f, 1f)  //LightPink1

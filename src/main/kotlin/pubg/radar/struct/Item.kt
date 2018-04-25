@@ -49,6 +49,7 @@ class Item {
             "K98" to "k98",
             "Kar98" to "k98",
             "Kar98k" to "k98",
+            "SKS" to "sks",
             "HK416" to "m416",
             "SCAR-L" to "scar",
             "M16A4" to "m16",

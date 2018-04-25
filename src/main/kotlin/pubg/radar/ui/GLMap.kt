@@ -154,7 +154,6 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
   lateinit var alarmSound: Sound
   
   val tileZooms = listOf("256", "512", "1024", "2048", "4096", "8192")
-  //val tileRowCounts = if (mapSelector == "Savage") listOf(1, 1, 2, 4, 8, 16) else listOf(1, 2, 4, 8, 16, 32)
   val tileRowCounts = listOf(1, 2, 4, 8, 16, 32)
   val tileSizes = listOf(819200f, 409600f, 204800f, 102400f, 51200f, 25600f)
   
@@ -526,7 +525,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
     shapeRenderer.projectionMatrix = camera.combined
     Gdx.gl.glEnable(GL20.GL_BLEND)
     
-    // drawGrid()
+    drawGrid()
     drawCircles()
     
     val typeLocation = EnumMap<Archetype, MutableList<renderInfo>>(Archetype::class.java)
@@ -665,10 +664,6 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
         drawPlayer(Color(0.2f, 0.8f, 0.6f, 1f), tuple4(null, selfX, selfY, selfDirection))
       else 
         drawPlayer(GREEN, tuple4(null, selfX, selfY, selfDirection))
-      // drawPlayer(GREEN, tuple4(null, selfX, selfY, selfDir.angle()))
-      //println("Head ${playerHead[selfStateID]}")
-      //println("Armor ${playerArmor[selfStateID]}")
-      //println("Back ${playerBack[selfStateID]}")
     }
     
     drawAttackLine(currentTime)
@@ -745,18 +740,16 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
     Gdx.gl.glLineWidth(1f)
   }
   
-  /*
   private fun drawGrid() {
     draw(Filled) {
-      color = GRAY
+      color = Color(0f, 0f, 0f, 0.5f)
       for (i in 0..7) {
-        rectLine(0f, i * unit, gridWidth, i * unit, 500f)
-        rectLine(i * unit, 0f, i * unit, gridWidth, 500f)
+        rectLine(0f, i * unit, gridWidth, i * unit, 2000f * camera.zoom)
+        rectLine(i * unit, 0f, i * unit, gridWidth, 2000f * camera.zoom)
       }
 
     }
   }
-  */
 
   private fun ShapeRenderer.drawAPawn(typeLocation: EnumMap<Archetype, MutableList<renderInfo>>,
                                       selfX: Float, selfY: Float,
@@ -886,76 +879,6 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
       }
     }
   }
-
-  /*
-  private fun ShapeRenderer.drawAirdropWeapon() { // Can be merged in drawItem
-    droppedItemLocation.values
-      .forEach {
-        val (x, y) = it._1
-        val items = it._2
-
-        val backgroundRadius = (itemRadius + 50f)
-        val radius = itemRadius
-        val triBackRadius = radius + 50f
-        val triRadius = radius
-        var offsetX = 600f
-        var offsetY = 600f
-
-        if (filterWeapon == 1) {
-          if ("AWM" in items) {
-            color = WHITE
-            rect(x - backgroundRadius - offsetX, y - backgroundRadius - offsetY, backgroundRadius * 2, backgroundRadius * 2)
-            color = rareAirdropWeaponColor
-            rect(x - radius - offsetX, y - radius - offsetY, radius * 2, radius * 2)
-          } 
-          else if ((items in "M24")) {
-            color = WHITE
-            rectLine(x - backgroundRadius/1.4f - offsetX, y - backgroundRadius/1.4f - offsetY,
-                     x + backgroundRadius/1.4f - offsetX, y + backgroundRadius/1.4f - offsetY, backgroundRadius * 2)
-            color = rareAirdropWeaponColor
-            rectLine(x - radius/1.4f - offsetX, y - radius/1.4f - offsetY,
-                     x + radius/1.4f - offsetX, y + radius/1.4f - offsetY, radius * 2)
-          }
-          else if (("Mk14" in items)) {
-            color = WHITE
-            circle(x - offsetX, y - offsetY, backgroundRadius, 10)
-            color = rareAirdropWeaponColor
-            circle(x - offsetX, y - offsetY, radius, 10)
-          } 
-          else if ("M249" in items) {
-            color = WHITE
-            triangle(x - triBackRadius - offsetX, y - triBackRadius - offsetY,
-                    x - triBackRadius - offsetX, y + triBackRadius - offsetY,
-                    x + triBackRadius - offsetX, y - triBackRadius - offsetY)
-            color = rareAirdropWeaponColor
-            triangle(x - triRadius - offsetX, y - triRadius - offsetY,
-                    x - triRadius - offsetX, y + triRadius - offsetY,
-                    x + triRadius - offsetX, y - triRadius - offsetY)
-          }
-          else if (("AUG" in items)) {
-            color = WHITE
-            triangle(x - triBackRadius - offsetX, y + triBackRadius - offsetY,
-                    x + triBackRadius - offsetX, y + triBackRadius - offsetY,
-                    x + triBackRadius - offsetX, y - triBackRadius - offsetY)
-            color = rareAirdropWeaponColor
-            triangle(x - triRadius - offsetX, y + triRadius - offsetY,
-                    x + triRadius - offsetX, y + triRadius - offsetY,
-                    x + triRadius - offsetX, y - triRadius - offsetY)
-          }
-          else if (("Groza" in items)) {
-            color = WHITE
-            triangle(x - triBackRadius - offsetX, y - triBackRadius - offsetY,
-                    x + triBackRadius - offsetX, y + triBackRadius - offsetY,
-                    x + triBackRadius - offsetX, y - triBackRadius - offsetY)
-            color = rareAirdropWeaponColor
-            triangle(x - triRadius - offsetX, y - triRadius - offsetY,
-                    x + triRadius - offsetX, y + triRadius - offsetY,
-                    x + triRadius - offsetX, y - triRadius - offsetY)
-          }
-        }        
-      }
-  }
-  */
   
   private fun ShapeRenderer.drawItem() {
     droppedItemLocation.values
@@ -973,7 +896,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
                 "4x" in items -> rare4xColor
                 "reddot" in items || "holo" in items || "2x" in items -> rare4xColor
                 
-                "k98" in items -> rareSniperColor
+                "k98" in items || "sks" in items -> rareSniperColor
                 "m416" in items || "scar" in items || "m16" in items -> rareRifleColor
                 "dp28" in items || "ak" in items -> rareRifleColor
                 "FlareGun" in items -> rareFlareColor
@@ -981,8 +904,10 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
                 "heal" in items -> healItemColor
                 "drink" in items -> drinkItemColor
 
-                "AR_Extended" in items || "AR_Suppressor" in items || "AR_Composite" in items -> rareARAttachColor
-                "SR_Extended" in items || "SR_Suppressor" in items || "CheekPad" in items -> rareSRAttachColor
+                "AR_Extended" in items || "AR_Suppressor" in items || 
+                "AR_Compensator" in items || "AR_Composite" in items -> rareARAttachColor
+                "SR_Extended" in items || "SR_Suppressor" in items || 
+                "SR_Compensator" in items || "CheekPad" in items || "BulletLoops" in items -> rareSRAttachColor
 
                 "ghillie" in items -> ghillieColor
 
@@ -1042,6 +967,15 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
             color = finalColor
             rect(x - radius, y - radius, radius * 2, radius * 2)
           }
+        } else if ("AR_Compensator" in items || "SR_Compensator" in items) {
+          if (filterAttach == 1) {
+            color = BLACK
+            rectLine(x - backgroundRadius/1.4f, y - backgroundRadius/1.4f,
+                     x + backgroundRadius/1.4f, y + backgroundRadius/1.4f, backgroundRadius * 2)
+            color = finalColor
+            rectLine(x - radius/1.4f, y - radius/1.4f,
+                     x + radius/1.4f, y + radius/1.4f, radius * 2)
+          }
         } else if ("AR_Suppressor" in items || "SR_Suppressor" in items) {
           if (filterAttach == 1) {
             color = BLACK
@@ -1060,6 +994,17 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
                     x - triRadius, y + triRadius,
                     x + triRadius, y - triRadius)
           }
+        } else if ("CheekPad" in items) {
+          if (filterAttach == 1) {
+            color = BLACK
+            triangle(x - triBackRadius, y - triBackRadius,
+                    x + triBackRadius, y + triBackRadius,
+                    x + triBackRadius, y - triBackRadius)
+            color = finalColor
+            triangle(x - triRadius, y - triRadius,
+                    x + triRadius, y + triRadius,
+                    x + triRadius, y - triRadius)
+          }
 
 
         } else if ("k98" in items || "m416" in items) {
@@ -1069,7 +1014,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
             color = finalColor
             rect(x - radius, y - radius, radius * 2, radius * 2)
           }
-        } else if ("scar" in items || "FlareGun" in items) {
+        } else if ("sks" in items || "scar" in items || "FlareGun" in items) {
           if (filterWeapon == 1) {
             color = BLACK
             rectLine(x - backgroundRadius/1.4f, y - backgroundRadius/1.4f,
@@ -1305,7 +1250,7 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
         
       var textBottom = when {
         MatchStartType == "241" /*NumAliveTeams == 3 && NumAlivePlayers > 12*/ -> if (isTeamMate(actor)) "" else "$angle°$distance"
-        isTeamMate(actor) -> "$name"
+        isTeamMate(actor) -> "${name.take(8)}"
         showPlayerName == 1 -> "$name"
         else -> "$angle°$distance"
       }
@@ -1678,13 +1623,13 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
 
         val name = playerNames[playerStateGUID] ?: "" //return
         if (name != "")
-          query(name, 500)
+          query(name, 10)
 
         // HACKER CHECK
         var hackerCheck = 0
         if (completedPlayerInfo.containsKey(name)) { 
           val info = completedPlayerInfo[name]!!
-          if (info.killDeathRatio > 2.5f || info.headshotKillRatio > 0.3f)
+          if (info.isHacker)
             hackerCheck = 1
         }
         
@@ -1725,7 +1670,8 @@ class GLMap: InputAdapter(), ApplicationListener, GameListener {
           circle(x, y, playerRadius, 10)
         }
       } catch (e: Exception) { 
-        println("drawPlayer error")
+        //val name = playerNames[playerStateGUID] ?: "" //return
+        println("drawPlayer circle error")
         color = BLACK
         circle(x, y, backgroundRadius, 10)
         color = pColor
